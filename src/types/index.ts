@@ -4,6 +4,7 @@ export * from './content';
 export * from './analytics';
 export * from './billing';
 export * from './api';
+export * from './help';
 
 // Common utility types
 export interface BaseEntity {
