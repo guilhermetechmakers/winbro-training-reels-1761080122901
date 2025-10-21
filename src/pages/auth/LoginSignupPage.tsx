@@ -1,25 +1,22 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 // UI Components
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Auth Components
-import ToggleTabs from '@/components/auth/ToggleTabs';
-import EmailPasswordForm from '@/components/auth/EmailPasswordForm';
-import SSOButtons from '@/components/auth/SSOButtons';
 import PasswordStrengthMeter from '@/components/auth/PasswordStrengthMeter';
 import TermsCheckbox from '@/components/auth/TermsCheckbox';
-// import ForgotPasswordLink from '@/components/auth/ForgotPasswordLink';
 import { authToasts } from '@/components/auth/ErrorSuccessToasters';
 
 // Icons
@@ -31,7 +28,9 @@ import {
   Lock,
   User,
   Building,
-  Shield
+  Shield,
+  ArrowRight,
+  CheckCircle
 } from 'lucide-react';
 
 // Hooks
@@ -64,9 +63,20 @@ type SignupFormData = z.infer<typeof signupSchema>;
 // Main Login/Signup Page Component
 const LoginSignupPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Handle URL parameters to set initial tab
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'signup') {
+      setActiveTab('signup');
+    } else if (tab === 'login') {
+      setActiveTab('login');
+    }
+  }, [searchParams]);
 
   // Auth actions
   const { 
@@ -76,15 +86,15 @@ const LoginSignupPage: React.FC = () => {
     isSigningUp 
   } = useAuthActions();
 
-  // Login form (handled by EmailPasswordForm component)
-  // const loginForm = useForm<LoginFormData>({
-  //   resolver: zodResolver(loginSchema),
-  //   defaultValues: {
-  //     email: '',
-  //     password: '',
-  //     remember_me: false,
-  //   },
-  // });
+  // Login form
+  const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      remember_me: false,
+    },
+  });
 
   // Signup form
   const signupForm = useForm<SignupFormData>({
@@ -137,12 +147,18 @@ const LoginSignupPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md animate-fade-in-up">
-        <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-5" aria-hidden="true" />
+      
+      <div className="w-full max-w-md relative z-10">
+        {/* Main Card */}
+        <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur-sm animate-fade-in-up">
           <CardHeader className="space-y-2 text-center pb-8">
-            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-scale-in" aria-hidden="true">
+            {/* Logo/Icon */}
+            <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-scale-in" aria-hidden="true">
               <Shield className="w-8 h-8 text-primary" />
             </div>
+            
             <CardTitle className="text-2xl font-bold text-foreground">
               Welcome to Winbro Training
             </CardTitle>
@@ -152,19 +168,127 @@ const LoginSignupPage: React.FC = () => {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <ToggleTabs 
-              activeTab={activeTab} 
-              onTabChange={setActiveTab}
-            />
+            {/* Toggle Tabs */}
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'signup')} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-lg">
+                <TabsTrigger 
+                  value="login" 
+                  className="text-sm font-medium transition-all duration-200 hover:scale-[1.02] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  Sign In
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="signup" 
+                  className="text-sm font-medium transition-all duration-200 hover:scale-[1.02] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  Create Account
+                </TabsTrigger>
+              </TabsList>
 
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'signup')} aria-label="Authentication form">
               {/* Login Tab */}
               <TabsContent value="login" className="space-y-4 mt-6" role="tabpanel" aria-labelledby="login-tab">
-                <EmailPasswordForm
-                  onSubmit={onLogin}
-                  isLoading={isLoading}
-                  onForgotPassword={handleForgotPassword}
-                />
+                <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4" aria-label="Sign in form">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email" className="text-sm font-medium">
+                      Email Address
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" aria-hidden="true" />
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        className="pl-10 h-12 transition-all duration-200 focus:scale-[1.01] focus:ring-2 focus:ring-primary/20"
+                        {...loginForm.register('email')}
+                      />
+                    </div>
+                    {loginForm.formState.errors.email && (
+                      <Alert variant="destructive" className="py-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          {loginForm.formState.errors.email.message}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password" className="text-sm font-medium">
+                      Password
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" aria-hidden="true" />
+                      <Input
+                        id="login-password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        className="pl-10 pr-10 h-12 transition-all duration-200 focus:scale-[1.01] focus:ring-2 focus:ring-primary/20"
+                        {...loginForm.register('password')}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent transition-all duration-200 hover:scale-110"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+                    {loginForm.formState.errors.password && (
+                      <Alert variant="destructive" className="py-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          {loginForm.formState.errors.password.message}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="remember-me"
+                        {...loginForm.register('remember_me')}
+                        className="transition-all duration-200 hover:scale-110"
+                      />
+                      <Label htmlFor="remember-me" className="text-sm text-muted-foreground">
+                        Remember me
+                      </Label>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="text-sm text-primary hover:text-primary/80 p-0 h-auto transition-all duration-200 hover:scale-105"
+                      onClick={handleForgotPassword}
+                    >
+                      Forgot password?
+                    </Button>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full h-12 text-sm font-semibold transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Signing in...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <span>Sign In</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                    )}
+                  </Button>
+                </form>
               </TabsContent>
 
               {/* Signup Tab */}
@@ -180,7 +304,7 @@ const LoginSignupPage: React.FC = () => {
                         id="signup-full-name"
                         type="text"
                         placeholder="Enter your full name"
-                        className="pl-10 h-12 transition-all duration-200 focus:scale-[1.01]"
+                        className="pl-10 h-12 transition-all duration-200 focus:scale-[1.01] focus:ring-2 focus:ring-primary/20"
                         {...signupForm.register('full_name')}
                       />
                     </div>
@@ -204,7 +328,7 @@ const LoginSignupPage: React.FC = () => {
                         id="signup-email"
                         type="email"
                         placeholder="Enter your email"
-                        className="pl-10 h-12 transition-all duration-200 focus:scale-[1.01]"
+                        className="pl-10 h-12 transition-all duration-200 focus:scale-[1.01] focus:ring-2 focus:ring-primary/20"
                         {...signupForm.register('email')}
                       />
                     </div>
@@ -228,7 +352,7 @@ const LoginSignupPage: React.FC = () => {
                         id="signup-organization"
                         type="text"
                         placeholder="Enter your organization"
-                        className="pl-10 h-12 transition-all duration-200 focus:scale-[1.01]"
+                        className="pl-10 h-12 transition-all duration-200 focus:scale-[1.01] focus:ring-2 focus:ring-primary/20"
                         {...signupForm.register('organization_name')}
                       />
                     </div>
@@ -244,7 +368,7 @@ const LoginSignupPage: React.FC = () => {
                         id="signup-password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Create a password"
-                        className="pl-10 pr-10 h-12 transition-all duration-200 focus:scale-[1.01]"
+                        className="pl-10 pr-10 h-12 transition-all duration-200 focus:scale-[1.01] focus:ring-2 focus:ring-primary/20"
                         {...signupForm.register('password')}
                       />
                       <Button
@@ -253,6 +377,7 @@ const LoginSignupPage: React.FC = () => {
                         size="sm"
                         className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent transition-all duration-200 hover:scale-110"
                         onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -282,7 +407,7 @@ const LoginSignupPage: React.FC = () => {
                         id="signup-confirm-password"
                         type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="Confirm your password"
-                        className="pl-10 pr-10 h-12 transition-all duration-200 focus:scale-[1.01]"
+                        className="pl-10 pr-10 h-12 transition-all duration-200 focus:scale-[1.01] focus:ring-2 focus:ring-primary/20"
                         {...signupForm.register('confirm_password')}
                       />
                       <Button
@@ -291,6 +416,7 @@ const LoginSignupPage: React.FC = () => {
                         size="sm"
                         className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent transition-all duration-200 hover:scale-110"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                       >
                         {showConfirmPassword ? (
                           <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -319,7 +445,7 @@ const LoginSignupPage: React.FC = () => {
 
                   <Button
                     type="submit"
-                    className="w-full h-12 text-sm font-semibold transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full h-12 text-sm font-semibold transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -328,7 +454,10 @@ const LoginSignupPage: React.FC = () => {
                         <span>Creating account...</span>
                       </div>
                     ) : (
-                      'Create Account'
+                      <div className="flex items-center space-x-2">
+                        <span>Create Account</span>
+                        <CheckCircle className="w-4 h-4" />
+                      </div>
                     )}
                   </Button>
                 </form>
@@ -346,10 +475,29 @@ const LoginSignupPage: React.FC = () => {
                 </div>
               </div>
 
-              <SSOButtons
-                onSSOLogin={handleSSOLogin}
-                disabled={isLoading}
-              />
+              <div className="space-y-3">
+                {/* Enterprise SSO Button */}
+                <Button
+                  variant="outline"
+                  className="w-full h-12 text-sm font-medium transition-all duration-200 hover:shadow-md hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed border-primary/20 hover:border-primary/40"
+                  onClick={() => handleSSOLogin('saml')}
+                  disabled={isLoading}
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Enterprise SSO
+                </Button>
+
+                {/* Google Workspace Button */}
+                <Button
+                  variant="outline"
+                  className="w-full h-12 text-sm font-medium transition-all duration-200 hover:shadow-md hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed border-primary/20 hover:border-primary/40"
+                  onClick={() => handleSSOLogin('google')}
+                  disabled={isLoading}
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Google Workspace
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
