@@ -13,9 +13,17 @@ import {
   XCircle, 
   Clock, 
   RotateCcw, 
-  BookOpen
+  BookOpen,
+  Target,
+  Award,
+  AlertTriangle,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  TrendingUp
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Quiz, QuizQuestion, QuizAnswer } from '@/types/content';
 
 interface InlineQuizModalProps {
@@ -189,283 +197,449 @@ const InlineQuizModal: React.FC<InlineQuizModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
+      <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="flex items-center gap-3 text-2xl">
+            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+              <BookOpen className="h-5 w-5 text-primary" />
+            </div>
             {quiz.title}
           </DialogTitle>
+          {quiz.description && (
+            <p className="text-muted-foreground mt-2">{quiz.description}</p>
+          )}
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Quiz Header */}
-          <div className="flex items-center justify-between">
+          {/* Enhanced Quiz Header */}
+          <motion.div 
+            className="flex items-center justify-between p-4 bg-muted/30 rounded-xl"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
             <div className="flex items-center gap-4">
-              <Badge variant="outline" className="flex items-center gap-1">
-                <RotateCcw className="h-3 w-3" />
+              <Badge variant="outline" className="flex items-center gap-2 px-3 py-1">
+                <RotateCcw className="h-4 w-4" />
                 Attempt {currentAttempt} of {maxAttempts}
               </Badge>
               {timeLimit && (
                 <Badge 
                   variant={quizState.timeRemaining < 60 ? "destructive" : "outline"}
-                  className="flex items-center gap-1"
+                  className={`flex items-center gap-2 px-3 py-1 ${
+                    quizState.timeRemaining < 60 ? 'animate-pulse' : ''
+                  }`}
                 >
-                  <Clock className="h-3 w-3" />
+                  <Clock className="h-4 w-4" />
                   {formatTime(quizState.timeRemaining)}
                 </Badge>
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                Question {currentQuestionIndex + 1} of {quiz.questions.length}
-              </span>
-              <Progress 
-                value={((currentQuestionIndex + 1) / quiz.questions.length) * 100} 
-                className="w-24 h-2"
-              />
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-foreground">
+                  Question {currentQuestionIndex + 1} of {quiz.questions.length}
+                </span>
+              </div>
+              <div className="w-32">
+                <Progress 
+                  value={((currentQuestionIndex + 1) / quiz.questions.length) * 100} 
+                  className="h-3"
+                />
+              </div>
             </div>
-          </div>
+          </motion.div>
 
           <Separator />
 
           {/* Quiz Results */}
-          {quizState.showResults ? (
-            <motion.div
-              className="space-y-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              {/* Score Summary */}
-              <Card className={passed ? 'border-success/20 bg-success/5' : 'border-error/20 bg-error/5'}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    {passed ? (
-                      <CheckCircle className="h-6 w-6 text-success" />
-                    ) : (
-                      <XCircle className="h-6 w-6 text-error" />
-                    )}
-                    Quiz Results
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-center">
-                    <div className={`text-4xl font-bold mb-2 ${getScoreColor(percentage)}`}>
-                      {quizState.score} / {quizState.maxScore}
-                    </div>
-                    <div className={`text-2xl font-semibold mb-4 ${getScoreColor(percentage)}`}>
-                      {percentage}%
-                    </div>
-                    
-                    <Badge 
-                      variant={getScoreBadgeVariant(percentage)}
-                      className="text-lg px-4 py-2"
-                    >
-                      {passed ? 'PASSED' : 'FAILED'}
-                    </Badge>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                      <div className="text-2xl font-semibold text-foreground">
-                        {quizState.correctAnswers}
+          <AnimatePresence mode="wait">
+            {quizState.showResults ? (
+              <motion.div
+                className="space-y-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+              >
+                {/* Enhanced Score Summary */}
+                <Card className={`overflow-hidden ${
+                  passed 
+                    ? 'border-success/30 bg-gradient-to-br from-success/5 to-success/10' 
+                    : 'border-error/30 bg-gradient-to-br from-error/5 to-error/10'
+                }`}>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        passed ? 'bg-success/20' : 'bg-error/20'
+                      }`}>
+                        {passed ? (
+                          <CheckCircle className="h-6 w-6 text-success" />
+                        ) : (
+                          <XCircle className="h-6 w-6 text-error" />
+                        )}
                       </div>
-                      <div className="text-sm text-muted-foreground">Correct Answers</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-semibold text-foreground">
-                        {quiz.questions.length - quizState.correctAnswers}
-                      </div>
-                      <div className="text-sm text-muted-foreground">Incorrect Answers</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Question Review */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Question Review</h3>
-                {quiz.questions.map((question, index) => {
-                  const userAnswer = quizState.answers[question.id];
-                  const isCorrect = checkAnswer(question, userAnswer);
-                  
-                  return (
-                    <Card key={question.id} className="overflow-hidden">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <h4 className="font-medium text-foreground">
-                            Question {index + 1}
-                          </h4>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={isCorrect ? "default" : "destructive"}>
-                              {isCorrect ? question.points : 0} / {question.points} pts
-                            </Badge>
-                            {isCorrect ? (
-                              <CheckCircle className="h-4 w-4 text-success" />
-                            ) : (
-                              <XCircle className="h-4 w-4 text-error" />
-                            )}
-                          </div>
-                        </div>
-                        
-                        <p className="text-foreground mb-4">{question.question}</p>
-                        
-                        <div className="space-y-3">
-                          <div>
-                            <span className="text-sm font-medium text-muted-foreground">Your Answer:</span>
-                            <p className={`mt-1 p-2 rounded ${
-                              isCorrect 
-                                ? "bg-success/10 text-success border border-success/20" 
-                                : "bg-error/10 text-error border border-error/20"
-                            }`}>
-                              {Array.isArray(userAnswer) ? userAnswer.join(", ") : userAnswer || 'No answer provided'}
-                            </p>
-                          </div>
-                          
-                          <div>
-                            <span className="text-sm font-medium text-muted-foreground">Correct Answer:</span>
-                            <p className="mt-1 p-2 bg-success/10 text-success border border-success/20 rounded">
-                              {Array.isArray(question.correct_answer) 
-                                ? question.correct_answer.join(", ") 
-                                : question.correct_answer}
-                            </p>
-                          </div>
-                          
-                          {question.explanation && (
-                            <div>
-                              <span className="text-sm font-medium text-muted-foreground">Explanation:</span>
-                              <p className="mt-1 p-2 bg-info/10 text-info border border-info/20 rounded">
-                                {question.explanation}
-                              </p>
-                            </div>
+                      Quiz Results
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="text-center">
+                      <motion.div 
+                        className={`text-6xl font-bold mb-2 ${getScoreColor(percentage)}`}
+                        initial={{ scale: 0.5 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                      >
+                        {quizState.score} / {quizState.maxScore}
+                      </motion.div>
+                      <motion.div 
+                        className={`text-3xl font-semibold mb-4 ${getScoreColor(percentage)}`}
+                        initial={{ scale: 0.8 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 200, damping: 10, delay: 0.1 }}
+                      >
+                        {percentage}%
+                      </motion.div>
+                      
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 200, damping: 10, delay: 0.2 }}
+                      >
+                        <Badge 
+                          variant={getScoreBadgeVariant(percentage)}
+                          className={`text-lg px-6 py-2 ${
+                            passed 
+                              ? 'bg-success text-success-foreground' 
+                              : 'bg-error text-error-foreground'
+                          }`}
+                        >
+                          {passed ? (
+                            <>
+                              <Award className="h-4 w-4 mr-2" />
+                              PASSED
+                            </>
+                          ) : (
+                            <>
+                              <AlertTriangle className="h-4 w-4 mr-2" />
+                              FAILED
+                            </>
                           )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+                        </Badge>
+                      </motion.div>
+                    </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-4">
-                <Button variant="outline" onClick={onClose}>
-                  Close
-                </Button>
-                
-                <div className="flex items-center gap-2">
-                  {!passed && currentAttempt < maxAttempts && onRetry && (
-                    <Button onClick={onRetry}>
-                      <RotateCcw className="h-4 w-4 mr-2" />
-                      Retry Quiz
-                    </Button>
-                  )}
-                  <Button onClick={onClose}>
-                    Continue
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          ) : (
-            /* Quiz Questions */
-            <motion.div
-              key={currentQuestionIndex}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>Question {currentQuestionIndex + 1}</span>
-                    <Badge variant="outline">
-                      {currentQuestion.points} points
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-lg text-foreground">{currentQuestion.question}</p>
+                    <div className="grid grid-cols-3 gap-6 text-center">
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="p-4 bg-card rounded-lg border"
+                      >
+                        <div className="text-3xl font-bold text-success mb-1">
+                          {quizState.correctAnswers}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Correct</div>
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="p-4 bg-card rounded-lg border"
+                      >
+                        <div className="text-3xl font-bold text-error mb-1">
+                          {quiz.questions.length - quizState.correctAnswers}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Incorrect</div>
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="p-4 bg-card rounded-lg border"
+                      >
+                        <div className="text-3xl font-bold text-primary mb-1">
+                          {quiz.questions.length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Total</div>
+                      </motion.div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Enhanced Question Review */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    <h3 className="text-xl font-semibold">Question Review</h3>
+                  </div>
                   
-                  {/* Multiple Choice */}
-                  {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
-                    <RadioGroup
-                      value={quizState.answers[currentQuestion.id] as string}
-                      onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
-                    >
-                      {currentQuestion.options.map((option, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option} id={`${currentQuestion.id}-${index}`} />
-                          <Label htmlFor={`${currentQuestion.id}-${index}`} className="text-foreground">
-                            {option}
-                          </Label>
+                  <div className="grid gap-4">
+                    {quiz.questions.map((question, index) => {
+                      const userAnswer = quizState.answers[question.id];
+                      const isCorrect = checkAnswer(question, userAnswer);
+                      
+                      return (
+                        <motion.div
+                          key={question.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <Card className={`overflow-hidden ${
+                            isCorrect 
+                              ? 'border-success/20 bg-success/5' 
+                              : 'border-error/20 bg-error/5'
+                          }`}>
+                            <CardContent className="p-6">
+                              <div className="flex items-start justify-between mb-4">
+                                <h4 className="font-semibold text-foreground text-lg">
+                                  Question {index + 1}
+                                </h4>
+                                <div className="flex items-center gap-3">
+                                  <Badge 
+                                    variant={isCorrect ? "default" : "destructive"}
+                                    className={`px-3 py-1 ${
+                                      isCorrect 
+                                        ? 'bg-success text-success-foreground' 
+                                        : 'bg-error text-error-foreground'
+                                    }`}
+                                  >
+                                    {isCorrect ? question.points : 0} / {question.points} pts
+                                  </Badge>
+                                  {isCorrect ? (
+                                    <CheckCircle className="h-5 w-5 text-success" />
+                                  ) : (
+                                    <XCircle className="h-5 w-5 text-error" />
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <p className="text-foreground mb-6 text-lg leading-relaxed">{question.question}</p>
+                              
+                              <div className="space-y-4">
+                                <div>
+                                  <span className="text-sm font-semibold text-muted-foreground mb-2 block">Your Answer:</span>
+                                  <div className={`p-3 rounded-lg border ${
+                                    isCorrect 
+                                      ? "bg-success/10 text-success border-success/30" 
+                                      : "bg-error/10 text-error border-error/30"
+                                  }`}>
+                                    <p className="font-medium">
+                                      {Array.isArray(userAnswer) ? userAnswer.join(", ") : userAnswer || 'No answer provided'}
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <span className="text-sm font-semibold text-muted-foreground mb-2 block">Correct Answer:</span>
+                                  <div className="p-3 bg-success/10 text-success border border-success/30 rounded-lg">
+                                    <p className="font-medium">
+                                      {Array.isArray(question.correct_answer) 
+                                        ? question.correct_answer.join(", ") 
+                                        : question.correct_answer}
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                {question.explanation && (
+                                  <div>
+                                    <span className="text-sm font-semibold text-muted-foreground mb-2 block">Explanation:</span>
+                                    <div className="p-3 bg-info/10 text-info border border-info/30 rounded-lg">
+                                      <p className="leading-relaxed">{question.explanation}</p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Enhanced Action Buttons */}
+                <motion.div 
+                  className="flex items-center justify-between pt-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <Button variant="outline" onClick={onClose} size="lg">
+                    Close
+                  </Button>
+                  
+                  <div className="flex items-center gap-3">
+                    {!passed && currentAttempt < maxAttempts && onRetry && (
+                      <Button onClick={onRetry} variant="outline" size="lg">
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Retry Quiz
+                      </Button>
+                    )}
+                    <Button onClick={onClose} size="lg" className="min-w-32">
+                      {passed ? (
+                        <>
+                          <Award className="h-4 w-4 mr-2" />
+                          Continue
+                        </>
+                      ) : (
+                        'Continue'
+                      )}
+                    </Button>
+                  </div>
+                </motion.div>
+            </motion.div>
+            ) : (
+              /* Enhanced Quiz Questions */
+              <motion.div
+                key={currentQuestionIndex}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="overflow-hidden">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <span className="text-sm font-bold text-primary">{currentQuestionIndex + 1}</span>
                         </div>
-                      ))}
-                    </RadioGroup>
-                  )}
-
-                  {/* True/False */}
-                  {currentQuestion.type === 'true_false' && (
-                    <RadioGroup
-                      value={quizState.answers[currentQuestion.id] as string}
-                      onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="true" id={`${currentQuestion.id}-true`} />
-                        <Label htmlFor={`${currentQuestion.id}-true`} className="text-foreground">
-                          True
-                        </Label>
+                        <span className="text-xl">Question {currentQuestionIndex + 1}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="false" id={`${currentQuestion.id}-false`} />
-                        <Label htmlFor={`${currentQuestion.id}-false`} className="text-foreground">
-                          False
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  )}
+                      <Badge variant="outline" className="px-3 py-1">
+                        <Star className="h-3 w-3 mr-1" />
+                        {currentQuestion.points} points
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <p className="text-xl text-foreground leading-relaxed">{currentQuestion.question}</p>
+                  
+                    {/* Enhanced Multiple Choice */}
+                    {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
+                      <RadioGroup
+                        value={quizState.answers[currentQuestion.id] as string}
+                        onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
+                        className="space-y-3"
+                      >
+                        {currentQuestion.options.map((option, index) => (
+                          <motion.div 
+                            key={index} 
+                            className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <RadioGroupItem value={option} id={`${currentQuestion.id}-${index}`} />
+                            <Label 
+                              htmlFor={`${currentQuestion.id}-${index}`} 
+                              className="text-foreground cursor-pointer flex-1 text-lg"
+                            >
+                              {option}
+                            </Label>
+                          </motion.div>
+                        ))}
+                      </RadioGroup>
+                    )}
 
-                  {/* Short Answer */}
-                  {currentQuestion.type === 'short_answer' && (
-                    <Input
-                      placeholder="Enter your answer..."
-                      value={quizState.answers[currentQuestion.id] as string || ''}
-                      onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
-                    />
-                  )}
+                    {/* Enhanced True/False */}
+                    {currentQuestion.type === 'true_false' && (
+                      <RadioGroup
+                        value={quizState.answers[currentQuestion.id] as string}
+                        onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
+                        className="space-y-3"
+                      >
+                        <motion.div 
+                          className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <RadioGroupItem value="true" id={`${currentQuestion.id}-true`} />
+                          <Label htmlFor={`${currentQuestion.id}-true`} className="text-foreground cursor-pointer flex-1 text-lg font-medium">
+                            True
+                          </Label>
+                        </motion.div>
+                        <motion.div 
+                          className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <RadioGroupItem value="false" id={`${currentQuestion.id}-false`} />
+                          <Label htmlFor={`${currentQuestion.id}-false`} className="text-foreground cursor-pointer flex-1 text-lg font-medium">
+                            False
+                          </Label>
+                        </motion.div>
+                      </RadioGroup>
+                    )}
+
+                    {/* Enhanced Short Answer */}
+                    {currentQuestion.type === 'short_answer' && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-muted-foreground">
+                          Your Answer:
+                        </Label>
+                        <Input
+                          placeholder="Enter your answer..."
+                          value={quizState.answers[currentQuestion.id] as string || ''}
+                          onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+                          className="text-lg p-4"
+                        />
+                      </div>
+                    )}
                 </CardContent>
               </Card>
 
-              {/* Navigation */}
-              <div className="flex items-center justify-between pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
-                  disabled={currentQuestionIndex === 0}
-                >
-                  Previous
-                </Button>
-
-                <div className="flex items-center gap-2">
-                  {currentQuestionIndex === quiz.questions.length - 1 ? (
-                    <Button 
-                      onClick={handleSubmit}
-                      disabled={isLoading}
-                      className="px-8"
-                    >
-                      {isLoading ? 'Submitting...' : 'Submit Quiz'}
-                    </Button>
-                  ) : (
+                  {/* Enhanced Navigation */}
+                  <div className="flex items-center justify-between pt-6">
                     <Button
-                      onClick={() => setCurrentQuestionIndex(Math.min(quiz.questions.length - 1, currentQuestionIndex + 1))}
+                      variant="outline"
+                      onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
+                      disabled={currentQuestionIndex === 0}
+                      size="lg"
+                      className="flex items-center gap-2"
                     >
-                      Next Question
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
                     </Button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
+
+                    <div className="flex items-center gap-3">
+                      {currentQuestionIndex === quiz.questions.length - 1 ? (
+                        <Button 
+                          onClick={handleSubmit}
+                          disabled={isLoading}
+                          className="px-8 min-w-40"
+                          size="lg"
+                        >
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Submitting...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Submit Quiz
+                            </>
+                          )}
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => setCurrentQuestionIndex(Math.min(quiz.questions.length - 1, currentQuestionIndex + 1))}
+                          size="lg"
+                          className="flex items-center gap-2"
+                        >
+                          Next Question
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </DialogContent>
     </Dialog>
