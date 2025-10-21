@@ -18,6 +18,7 @@ import CourseBuilderPage from '@/pages/CourseBuilderPage';
 import LearningPlayerPage from '@/pages/LearningPlayerPage';
 import QuizPage from '@/pages/QuizPage';
 import CertificatePage from '@/pages/CertificatePage';
+import QuizCertificatePage from '@/pages/QuizCertificatePage';
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
 import UserManagementPage from '@/pages/admin/UserManagementPage';
 import SettingsPage from '@/pages/SettingsPage';
@@ -109,6 +110,11 @@ function App() {
               <Route path="/certificate/:id" element={
                 <ProtectedRoute>
                   <CertificatePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/quiz/:quizId/results/:attemptId" element={
+                <ProtectedRoute>
+                  <QuizCertificatePage />
                 </ProtectedRoute>
               } />
               <Route path="/settings" element={
