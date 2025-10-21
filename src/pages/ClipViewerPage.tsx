@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ArrowLeft } from 'lucide-react';
 
@@ -21,10 +21,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { clipsApi } from '@/lib/api';
 
 // Types
+import type { TranscriptSegment } from '@/types/content';
 
 const ClipViewerPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [isTranscriptVisible, setIsTranscriptVisible] = useState(true);
   const [isNotesVisible, setIsNotesVisible] = useState(false);
 
@@ -44,14 +46,37 @@ const ClipViewerPage: React.FC = () => {
   // Fetch related clips
   const { data: relatedClips } = useQuery({
     queryKey: ['related-clips', id],
-    queryFn: () => clipsApi.search('', {
-      machine_models: clip?.machine_model ? [clip.machine_model] : [],
-      processes: clip?.process ? [clip.process] : [],
-      limit: 6,
-      exclude: id
-    }),
-    enabled: !!clip,
+    queryFn: () => clipsApi.getRelated(id!, 6),
+    enabled: !!id,
   });
+
+  // Track view mutation
+  const trackViewMutation = useMutation({
+    mutationFn: (timeWatched: number) => clipsApi.trackView(id!, timeWatched),
+    onError: (error) => {
+      console.error('Failed to track view:', error);
+    },
+  });
+
+  // Handle time updates
+  const handleTimeUpdate = useCallback((time: number) => {
+    // Track view every 10 seconds
+    if (Math.floor(time) % 10 === 0) {
+      trackViewMutation.mutate(time);
+    }
+  }, [trackViewMutation]);
+
+  // Handle segment changes
+  const handleSegmentChange = useCallback((segment: TranscriptSegment | null) => {
+    // Handle segment highlighting if needed
+    console.log('Active segment:', segment);
+  }, []);
+
+  // Handle timestamp clicks
+  const handleTimestampClick = useCallback((time: number) => {
+    // This would be handled by the video player
+    console.log('Seek to:', time);
+  }, []);
 
   if (isLoading) {
     return (
@@ -146,26 +171,51 @@ const ClipViewerPage: React.FC = () => {
           
           <ActionsPanel 
             clip={clip}
-            onBookmark={() => {
-              // Handle bookmark action
-              toast.success('Added to bookmarks');
+            onBookmark={async () => {
+              try {
+                await clipsApi.bookmark(clip.id);
+                queryClient.invalidateQueries({ queryKey: ['clip', id] });
+                toast.success('Added to bookmarks');
+              } catch (error) {
+                toast.error('Failed to bookmark clip');
+              }
             }}
             onAddToCourse={() => {
-              // Handle add to course action
-              toast.success('Added to course');
+              // Navigate to course builder with this clip pre-selected
+              navigate('/course-builder', { state: { selectedClip: clip } });
             }}
-            onReport={() => {
-              // Handle report action
-              toast.success('Issue reported');
+            onReport={async () => {
+              try {
+                await clipsApi.report(clip.id, 'content_issue', 'User reported an issue with this clip');
+                toast.success('Issue reported successfully');
+              } catch (error) {
+                toast.error('Failed to report issue');
+              }
             }}
-            onDownload={() => {
-              // Handle download action
-              toast.success('Download started');
+            onDownload={async () => {
+              try {
+                const downloadData = await clipsApi.getDownloadUrl(clip.id);
+                const link = document.createElement('a');
+                link.href = downloadData.url;
+                link.download = `${clip.title}.mp4`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                toast.success('Download started');
+              } catch (error) {
+                toast.error('Download failed');
+              }
             }}
-            onShare={() => {
-              // Handle share action
-              navigator.clipboard.writeText(window.location.href);
-              toast.success('Link copied to clipboard');
+            onShare={async () => {
+              try {
+                const shareData = await clipsApi.getShareUrl(clip.id);
+                await navigator.clipboard.writeText(shareData.url);
+                toast.success('Share link copied to clipboard');
+              } catch (error) {
+                // Fallback to current URL
+                await navigator.clipboard.writeText(window.location.href);
+                toast.success('Link copied to clipboard');
+              }
             }}
           />
         </div>
@@ -176,18 +226,15 @@ const ClipViewerPage: React.FC = () => {
             {/* Video Player */}
             <VideoPlayer
               clip={clip}
-              onTimeUpdate={() => {
-                // Handle time updates for transcript sync
-              }}
+              onTimeUpdate={handleTimeUpdate}
+              onSegmentChange={handleSegmentChange}
             />
 
             {/* Transcript & Timestamps */}
             {isTranscriptVisible && (
             <TranscriptTimestamps
               transcript={clip.transcript}
-              onTimestampClick={() => {
-                // Handle timestamp click
-              }}
+              onTimestampClick={handleTimestampClick}
               onToggleVisibility={() => setIsTranscriptVisible(false)}
             />
             )}
@@ -226,7 +273,7 @@ const ClipViewerPage: React.FC = () => {
 
             {/* Related Clips */}
             <RelatedClips 
-              clips={relatedClips?.clips || []}
+              clips={relatedClips || []}
               currentClipId={clip.id}
             />
           </div>

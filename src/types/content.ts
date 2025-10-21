@@ -216,6 +216,46 @@ export interface Comment {
   replies: Comment[];
   created_at: string;
   updated_at: string;
+  user: User; // Include user info for display
+}
+
+// Clip Viewer specific types
+export interface ClipViewerState {
+  currentTime: number;
+  isPlaying: boolean;
+  isTranscriptVisible: boolean;
+  isNotesVisible: boolean;
+  activeSegmentId?: string;
+  playbackRate: number;
+  quality: string;
+  isLooping: boolean;
+  volume: number;
+  isMuted: boolean;
+}
+
+export interface ClipViewerActions {
+  onTimeUpdate: (time: number) => void;
+  onPlayPause: () => void;
+  onSeek: (time: number) => void;
+  onSegmentClick: (segment: TranscriptSegment) => void;
+  onBookmark: () => void;
+  onAddToCourse: () => void;
+  onReport: () => void;
+  onDownload: () => void;
+  onShare: () => void;
+  onNoteAdd: (content: string, timestamp?: number) => void;
+  onCommentAdd: (content: string, parentId?: string) => void;
+}
+
+export interface RelatedClip {
+  id: string;
+  title: string;
+  thumbnail_url: string;
+  duration: number;
+  machine_model: string;
+  process: string;
+  tags: string[];
+  similarity_score: number;
 }
 
 export interface SearchFilters {

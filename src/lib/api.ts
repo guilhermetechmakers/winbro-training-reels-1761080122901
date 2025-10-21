@@ -155,8 +155,20 @@ export const clipsApi = {
     });
   },
   
-  search: (_query: string, _filters?: any) =>
-    api.get<any>('/clips/search'),
+  search: (query: string, filters?: any) => {
+    const params = new URLSearchParams();
+    if (query) params.append('q', query);
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach(v => params.append(key, v));
+        } else if (value) {
+          params.append(key, value.toString());
+        }
+      });
+    }
+    return api.get<any>(`/clips/search?${params.toString()}`);
+  },
   
   bookmark: (id: string) => api.post(`/clips/${id}/bookmark`, {}),
   
@@ -167,13 +179,40 @@ export const clipsApi = {
   
   getNotes: (id: string) => api.get<any>(`/clips/${id}/notes`),
   
+  updateNote: (id: string, noteId: string, content: string) =>
+    api.put(`/clips/${id}/notes/${noteId}`, { content }),
+  
+  deleteNote: (id: string, noteId: string) =>
+    api.delete(`/clips/${id}/notes/${noteId}`),
+  
   addComment: (id: string, content: string, parent_id?: string) =>
     api.post(`/clips/${id}/comments`, { content, parent_id }),
   
   getComments: (id: string) => api.get<any>(`/clips/${id}/comments`),
   
+  updateComment: (id: string, commentId: string, content: string) =>
+    api.put(`/clips/${id}/comments/${commentId}`, { content }),
+  
+  deleteComment: (id: string, commentId: string) =>
+    api.delete(`/clips/${id}/comments/${commentId}`),
+  
   report: (id: string, reason: string, description?: string) =>
     api.post(`/clips/${id}/report`, { reason, description }),
+  
+  getRelated: (id: string, limit: number = 6) =>
+    api.get<any>(`/clips/${id}/related?limit=${limit}`),
+  
+  trackView: (id: string, timeWatched: number) =>
+    api.post(`/clips/${id}/view`, { time_watched: timeWatched }),
+  
+  getTranscript: (id: string) => api.get<any>(`/clips/${id}/transcript`),
+  
+  updateTranscript: (id: string, segments: any[]) =>
+    api.put(`/clips/${id}/transcript`, { segments }),
+  
+  getDownloadUrl: (id: string) => api.get<any>(`/clips/${id}/download-url`),
+  
+  getShareUrl: (id: string) => api.post<any>(`/clips/${id}/share`, {}),
 };
 
 // Courses API

@@ -1,21 +1,24 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, PictureInPicture, RotateCcw, SkipBack, SkipForward } from 'lucide-react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { Play, Pause, Volume2, VolumeX, Maximize, PictureInPicture, RotateCcw, SkipBack, SkipForward, Settings, Captions } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Toggle } from '@/components/ui/toggle';
 import { cn } from '@/lib/utils';
-import type { Clip } from '@/types/content';
+import type { Clip, TranscriptSegment } from '@/types/content';
 
 interface VideoPlayerProps {
   clip: Clip;
   onTimeUpdate?: (time: number) => void;
+  onSegmentChange?: (segment: TranscriptSegment | null) => void;
   className?: string;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
   clip,
   onTimeUpdate,
+  onSegmentChange,
   className
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -32,6 +35,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [showControls, setShowControls] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [captionsEnabled, setCaptionsEnabled] = useState(false);
+  const [hlsSupported, setHlsSupported] = useState(false);
 
   // Available quality options
   const qualityOptions = [
@@ -169,6 +176,34 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
+  // Check for HLS support
+  useEffect(() => {
+    const checkHlsSupport = () => {
+      const video = document.createElement('video');
+      const canPlayHls = video.canPlayType('application/vnd.apple.mpegurl') || 
+                        video.canPlayType('application/x-mpegURL');
+      setHlsSupported(!!canPlayHls);
+    };
+    checkHlsSupport();
+  }, []);
+
+  // Handle transcript segment highlighting
+  const updateActiveSegment = useCallback((time: number) => {
+    if (!clip.transcript || clip.transcript.length === 0) return;
+    
+    const activeSegment = clip.transcript.find(segment => 
+      time >= segment.start_time && time <= segment.end_time
+    );
+    
+    if (activeSegment && activeSegment.id !== activeSegmentId) {
+      setActiveSegmentId(activeSegment.id);
+      onSegmentChange?.(activeSegment);
+    } else if (!activeSegment && activeSegmentId) {
+      setActiveSegmentId(null);
+      onSegmentChange?.(null);
+    }
+  }, [clip.transcript, activeSegmentId, onSegmentChange]);
+
   // Event handlers
   useEffect(() => {
     const video = videoRef.current;
@@ -185,6 +220,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const handleTimeUpdate = () => {
       setCurrentTime(video.currentTime);
       onTimeUpdate?.(video.currentTime);
+      updateActiveSegment(video.currentTime);
     };
     const handleDurationChange = () => setDuration(video.duration);
     const handleVolumeChange = () => {
@@ -221,7 +257,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('pictureinpicturechange', handlePictureInPictureChange);
     };
-  }, [onTimeUpdate]);
+  }, [onTimeUpdate, updateActiveSegment]);
 
   // Auto-hide controls
   useEffect(() => {
@@ -263,9 +299,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           poster={clip.thumbnail_url}
           preload="metadata"
           playsInline
+          crossOrigin="anonymous"
         >
-          <source src={clip.hls_url} type="application/x-mpegURL" />
+          {hlsSupported && clip.hls_url && (
+            <source src={clip.hls_url} type="application/x-mpegURL" />
+          )}
           <source src={clip.video_url} type="video/mp4" />
+          {captionsEnabled && clip.transcript && (
+            <track
+              kind="captions"
+              src={`/api/clips/${clip.id}/captions.vtt`}
+              srcLang="en"
+              label="English"
+              default
+            />
+          )}
           Your browser does not support the video tag.
         </video>
 
@@ -380,6 +428,25 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 </SelectContent>
               </Select>
 
+              {/* Captions Toggle */}
+              <Toggle
+                pressed={captionsEnabled}
+                onPressedChange={setCaptionsEnabled}
+                className="text-white hover:bg-white/20 data-[state=on]:bg-white/20"
+              >
+                <Captions className="h-4 w-4" />
+              </Toggle>
+
+              {/* Settings */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSettings(!showSettings)}
+                className="text-white hover:bg-white/20"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+
               {/* Quality Selector */}
               <Select value={quality} onValueChange={handleQualityChange}>
                 <SelectTrigger className="w-20 h-8 text-white bg-transparent border-white/20">
@@ -428,6 +495,56 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               </Button>
             </div>
           </div>
+
+          {/* Settings Panel */}
+          {showSettings && (
+            <div className="absolute bottom-16 right-4 bg-black/90 rounded-lg p-4 space-y-3 min-w-48">
+              <div className="space-y-2">
+                <label className="text-white text-sm font-medium">Playback Speed</label>
+                <Select value={playbackRate.toString()} onValueChange={(value) => handleSpeedChange(parseFloat(value))}>
+                  <SelectTrigger className="w-full h-8 text-white bg-transparent border-white/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {speedOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value.toString()}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-white text-sm font-medium">Quality</label>
+                <Select value={quality} onValueChange={handleQualityChange}>
+                  <SelectTrigger className="w-full h-8 text-white bg-transparent border-white/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {qualityOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-white text-sm font-medium">Loop</label>
+                  <Toggle
+                    pressed={isLooping}
+                    onPressedChange={toggleLoop}
+                    className="text-white hover:bg-white/20 data-[state=on]:bg-white/20"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Toggle>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Card>
