@@ -21,6 +21,7 @@ import CertificatePage from '@/pages/CertificatePage';
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
 import UserManagementPage from '@/pages/admin/UserManagementPage';
 import SettingsPage from '@/pages/SettingsPage';
+import UserProfilePage from '@/pages/UserProfilePage';
 import CheckoutPage from '@/pages/CheckoutPage';
 import TransactionHistoryPage from '@/pages/TransactionHistoryPage';
 import AnalyticsPage from '@/pages/AnalyticsPage';
@@ -113,6 +114,11 @@ function App() {
               <Route path="/settings" element={
                 <ProtectedRoute>
                   <SettingsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <UserProfilePage />
                 </ProtectedRoute>
               } />
               <Route path="/checkout" element={
