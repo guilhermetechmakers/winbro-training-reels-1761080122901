@@ -102,6 +102,11 @@ function App() {
                   <LearningPlayerPage />
                 </ProtectedRoute>
               } />
+              <Route path="/learning-player/:id" element={
+                <ProtectedRoute>
+                  <LearningPlayerPage />
+                </ProtectedRoute>
+              } />
               <Route path="/quiz/:id" element={
                 <ProtectedRoute>
                   <QuizPage />

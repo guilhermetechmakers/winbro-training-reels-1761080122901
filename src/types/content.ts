@@ -361,3 +361,101 @@ export interface RetakeOptions {
   next_attempt_allowed: boolean;
   reason?: string;
 }
+
+// Learning Player Course View Types
+export interface LearningPlayerState {
+  course_id: string;
+  user_id: string;
+  current_module_index: number;
+  current_node_index: number;
+  completed_modules: string[];
+  completed_nodes: string[];
+  current_quiz_attempt?: QuizAttempt;
+  is_quiz_modal_open: boolean;
+  is_certificate_modal_open: boolean;
+  overall_progress: number;
+  module_progress: Record<string, number>;
+  started_at: string;
+  last_activity_at: string;
+}
+
+export interface LearningPlayerProgress {
+  course_id: string;
+  user_id: string;
+  module_id: string;
+  node_id: string;
+  status: 'not_started' | 'in_progress' | 'completed' | 'locked';
+  started_at?: string;
+  completed_at?: string;
+  time_spent: number; // in seconds
+  score?: number;
+  max_score?: number;
+  attempts: number;
+  last_position?: number; // for video clips, position in seconds
+}
+
+export interface LearningPlayerCourse {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail_url?: string;
+  author: User;
+  modules: LearningPlayerModule[];
+  settings: CourseSettings;
+  total_duration: number; // in minutes
+  estimated_duration: number; // in minutes
+  enrollment_count: number;
+  completion_rate: number;
+  prerequisites: string[];
+  is_enrolled: boolean;
+  enrollment_date?: string;
+  progress: LearningPlayerProgress[];
+}
+
+export interface LearningPlayerModule {
+  id: string;
+  title: string;
+  description: string;
+  order: number;
+  nodes: LearningPlayerNode[];
+  is_required: boolean;
+  estimated_duration: number; // in minutes
+  is_completed: boolean;
+  is_locked: boolean;
+  progress: number; // 0-100
+}
+
+export interface LearningPlayerNode {
+  id: string;
+  type: 'clip' | 'quiz';
+  order: number;
+  title: string;
+  description?: string;
+  clip_id?: string;
+  clip?: Clip;
+  quiz?: Quiz;
+  is_required: boolean;
+  estimated_duration: number; // in minutes
+  is_completed: boolean;
+  is_locked: boolean;
+  status: 'not_started' | 'in_progress' | 'completed' | 'locked';
+  time_spent: number; // in seconds
+  score?: number;
+  max_score?: number;
+  attempts: number;
+  last_position?: number; // for video clips
+}
+
+export interface LearningPlayerActions {
+  onModuleComplete: (moduleId: string) => void;
+  onNodeComplete: (nodeId: string, score?: number) => void;
+  onNodeStart: (nodeId: string) => void;
+  onQuizSubmit: (answers: QuizAnswer[]) => void;
+  onCertificateDownload: () => void;
+  onCertificateShare: () => void;
+  onNext: () => void;
+  onPrevious: () => void;
+  onSeek: (time: number) => void;
+  onBookmark: (clipId: string) => void;
+  onNoteAdd: (content: string, timestamp?: number) => void;
+}
