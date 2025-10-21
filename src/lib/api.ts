@@ -366,3 +366,63 @@ export const exportApi = {
   
   getExports: (_params?: any) => api.get<any>('/export'),
 };
+
+// Admin API
+export const adminApi = {
+  getDashboard: () => api.get<any>('/admin/dashboard'),
+  
+  getKPIs: () => api.get<any>('/admin/kpis'),
+  
+  getCharts: (type: string, _params?: any) =>
+    api.get<any>(`/admin/charts/${type}`),
+  
+  getOutstandingTasks: (_params?: any) => api.get<any>('/admin/tasks'),
+  
+  getCustomers: (_params?: any) => api.get<any>('/admin/customers'),
+  
+  getSystemHealth: () => api.get<any>('/admin/health'),
+  
+  getNotifications: (_params?: any) => api.get<any>('/admin/notifications'),
+  
+  markNotificationRead: (id: string) => api.put(`/admin/notifications/${id}/read`, {}),
+  
+  getModerationQueue: (_params?: any) => api.get<any>('/admin/moderation'),
+  
+  moderateContent: (id: string, action: string, notes?: string) =>
+    api.post(`/admin/moderation/${id}`, { action, notes }),
+  
+  getUsers: (_params?: any) => api.get<any>('/admin/users'),
+  
+  updateUserRole: (userId: string, role: string) =>
+    api.put(`/admin/users/${userId}/role`, { role }),
+  
+  suspendUser: (userId: string, reason: string) =>
+    api.post(`/admin/users/${userId}/suspend`, { reason }),
+  
+  activateUser: (userId: string) => api.post(`/admin/users/${userId}/activate`, {}),
+  
+  getOrganizationMetrics: (orgId: string) =>
+    api.get<any>(`/admin/organizations/${orgId}/metrics`),
+  
+  updateOrganizationSettings: (orgId: string, settings: any) =>
+    api.put(`/admin/organizations/${orgId}/settings`, settings),
+  
+  getContentPerformance: (contentId: string) =>
+    api.get<any>(`/admin/content/${contentId}/performance`),
+  
+  getSearchAnalytics: (_params?: any) => api.get<any>('/admin/search-analytics'),
+  
+  getUploadAnalytics: (_params?: any) => api.get<any>('/admin/upload-analytics'),
+  
+  getCertificateAnalytics: (_params?: any) => api.get<any>('/admin/certificate-analytics'),
+  
+  exportData: (type: string, format: string, filters?: any) =>
+    api.post<any>('/admin/export', { type, format, filters }),
+  
+  getAuditLogs: (_params?: any) => api.get<any>('/admin/audit-logs'),
+  
+  getSystemMetrics: () => api.get<any>('/admin/system-metrics'),
+  
+  updateSystemSettings: (settings: any) =>
+    api.put('/admin/system-settings', settings),
+};
