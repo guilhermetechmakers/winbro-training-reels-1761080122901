@@ -7,7 +7,10 @@ import {
   Settings, 
   BarChart3,
   HelpCircle,
-  LogOut
+  LogOut,
+  Shield,
+  Users,
+  Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -30,6 +33,15 @@ const Navigation: React.FC<NavigationProps> = ({ className = "" }) => {
     { path: '/settings', label: 'Settings', icon: Settings },
   ];
 
+  const adminNavigationItems = [
+    { path: '/admin', label: 'Admin Dashboard', icon: Shield },
+    { path: '/admin/users', label: 'User Management', icon: Users },
+    { path: '/admin/customers', label: 'Customers', icon: Building2 },
+  ];
+
+  const isAdmin = user?.role === 'admin';
+  const currentNavigationItems = isAdmin ? [...navigationItems, ...adminNavigationItems] : navigationItems;
+
   const handleSignOut = () => {
     signOut();
   };
@@ -48,9 +60,11 @@ const Navigation: React.FC<NavigationProps> = ({ className = "" }) => {
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center space-x-1">
-            {navigationItems.map((item) => {
+            {currentNavigationItems.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path;
+              const isActive = location.pathname === item.path || 
+                (item.path === '/admin' && location.pathname.startsWith('/admin'));
+              const isAdminItem = adminNavigationItems.includes(item);
               
               return (
                 <Link
@@ -59,6 +73,8 @@ const Navigation: React.FC<NavigationProps> = ({ className = "" }) => {
                   className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:scale-105 ${
                     isActive
                       ? 'bg-primary text-primary-foreground'
+                      : isAdminItem
+                      ? 'text-secondary hover:text-secondary-foreground hover:bg-secondary/10'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >

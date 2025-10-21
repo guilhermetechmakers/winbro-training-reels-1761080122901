@@ -8,16 +8,20 @@ import {
   RefreshCw, 
   Settings,
   Download,
-  Filter,
-  Calendar,
   TrendingUp,
   Users,
   Building2,
   Clock,
   Video,
   BarChart3,
-  PieChart,
-  LineChart
+  LineChart,
+  Eye,
+  Flag,
+  MessageSquare,
+  FileText,
+  AlertTriangle,
+  Edit,
+  MoreHorizontal
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminDashboard, useKPIs, useCharts, useOutstandingTasks, useCustomers } from '@/hooks/useAdminDashboard';
@@ -28,11 +32,31 @@ import CustomerListQuickLinks from '@/components/admin-dashboard/CustomerListQui
 import type { OutstandingTask, CustomerSummary } from '@/types/admin';
 
 const AdminDashboardPage: React.FC = () => {
-  const { isLoading: dashboardLoading, refetch: refetchDashboard } = useAdminDashboard();
-  const { data: kpiData, isLoading: kpiLoading } = useKPIs();
-  const { data: chartsData, isLoading: chartsLoading } = useCharts('overview');
-  const { data: tasksData, isLoading: tasksLoading } = useOutstandingTasks();
-  const { data: customersData, isLoading: customersLoading } = useCustomers();
+  const { 
+    isLoading: dashboardLoading, 
+    error: dashboardError, 
+    refetch: refetchDashboard 
+  } = useAdminDashboard();
+  const { 
+    data: kpiData, 
+    isLoading: kpiLoading, 
+    error: kpiError 
+  } = useKPIs();
+  const { 
+    data: chartsData, 
+    isLoading: chartsLoading, 
+    error: chartsError 
+  } = useCharts('overview');
+  const { 
+    data: tasksData, 
+    isLoading: tasksLoading, 
+    error: tasksError 
+  } = useOutstandingTasks();
+  const { 
+    data: customersData, 
+    isLoading: customersLoading, 
+    error: customersError 
+  } = useCustomers();
 
   const handleTaskClick = (task: OutstandingTask) => {
     console.log('Task clicked:', task);
@@ -69,6 +93,7 @@ const AdminDashboardPage: React.FC = () => {
   };
 
   const isLoading = dashboardLoading || kpiLoading || chartsLoading || tasksLoading || customersLoading;
+  const hasError = dashboardError || kpiError || chartsError || tasksError || customersError;
 
   // Mock data for demonstration - in real app this would come from API
   const mockKPIData = {
@@ -196,6 +221,80 @@ const AdminDashboardPage: React.FC = () => {
     }
   ];
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-8">
+            {/* Header skeleton */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+              <div className="space-y-2">
+                <div className="h-8 bg-muted rounded w-48"></div>
+                <div className="h-4 bg-muted rounded w-64"></div>
+              </div>
+              <div className="flex space-x-2">
+                <div className="h-8 bg-muted rounded w-20"></div>
+                <div className="h-8 bg-muted rounded w-20"></div>
+                <div className="h-8 bg-muted rounded w-20"></div>
+              </div>
+            </div>
+            
+            {/* KPI Cards skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Card key={index} className="animate-pulse">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <div className="h-4 bg-muted rounded w-24"></div>
+                    <div className="h-10 w-10 bg-muted rounded-xl"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-8 bg-muted rounded w-20 mb-2"></div>
+                    <div className="h-3 bg-muted rounded w-32"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            
+            {/* Content skeleton */}
+            <div className="space-y-6">
+              <div className="h-64 bg-muted rounded-xl"></div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="h-64 bg-muted rounded-xl"></div>
+                <div className="h-64 bg-muted rounded-xl"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <Card className="border-error/50 bg-error/5">
+            <CardContent className="p-8 text-center">
+              <AlertTriangle className="h-12 w-12 text-error mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-error mb-2">
+                Error Loading Dashboard
+              </h2>
+              <p className="text-muted-foreground mb-4">
+                There was an error loading the admin dashboard data. Please try again.
+              </p>
+              <Button onClick={handleRefresh} className="mr-2">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -301,18 +400,33 @@ const AdminDashboardPage: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="content" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Content Management Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="hover:shadow-elevation-200 transition-all duration-200">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                    <span>Content Performance</span>
+                    <Video className="h-5 w-5 text-primary" />
+                    <span>Content Library</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <PieChart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Content analytics coming soon</p>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Total Clips</span>
+                      <span className="text-2xl font-bold">1,247</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Pending Review</span>
+                      <Badge variant="secondary">15</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Flagged Content</span>
+                      <Badge variant="destructive">3</Badge>
+                    </div>
+                    <Button className="w-full" size="sm">
+                      <Eye className="h-4 w-4 mr-2" />
+                      Manage Content
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -320,18 +434,147 @@ const AdminDashboardPage: React.FC = () => {
               <Card className="hover:shadow-elevation-200 transition-all duration-200">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <Clock className="h-5 w-5 text-primary" />
-                    <span>Recent Activity</span>
+                    <Flag className="h-5 w-5 text-error" />
+                    <span>Moderation Queue</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Activity feed coming soon</p>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Awaiting Review</span>
+                      <Badge variant="destructive">8</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">User Reports</span>
+                      <Badge variant="secondary">12</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Auto-Flagged</span>
+                      <Badge variant="secondary">5</Badge>
+                    </div>
+                    <Button className="w-full" size="sm" variant="outline">
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Review Queue
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="hover:shadow-elevation-200 transition-all duration-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <TrendingUp className="h-5 w-5 text-success" />
+                    <span>Content Analytics</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Top Performing</span>
+                      <span className="text-sm font-medium">Safety Protocol</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Avg. View Time</span>
+                      <span className="text-sm font-medium">2.3 min</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Completion Rate</span>
+                      <span className="text-sm font-medium">87%</span>
+                    </div>
+                    <Button className="w-full" size="sm" variant="outline">
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      View Analytics
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Content Management Actions */}
+            <Card className="hover:shadow-elevation-200 transition-all duration-200">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Settings className="h-5 w-5 text-primary" />
+                  <span>Content Management Actions</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex-col space-y-2 hover:bg-primary/10 hover:border-primary transition-all duration-200 hover:scale-105"
+                  >
+                    <Eye className="h-6 w-6" />
+                    <span className="text-sm font-medium">Review Content</span>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex-col space-y-2 hover:bg-error/10 hover:border-error transition-all duration-200 hover:scale-105"
+                  >
+                    <Flag className="h-6 w-6" />
+                    <span className="text-sm font-medium">Moderate</span>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex-col space-y-2 hover:bg-success/10 hover:border-success transition-all duration-200 hover:scale-105"
+                  >
+                    <Edit className="h-6 w-6" />
+                    <span className="text-sm font-medium">Edit Metadata</span>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex-col space-y-2 hover:bg-secondary/10 hover:border-secondary transition-all duration-200 hover:scale-105"
+                  >
+                    <FileText className="h-6 w-6" />
+                    <span className="text-sm font-medium">Bulk Actions</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Content Activity */}
+            <Card className="hover:shadow-elevation-200 transition-all duration-200">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  <span>Recent Content Activity</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[
+                    { id: 1, title: "Machine Safety Protocol", action: "Uploaded", user: "John Doe", time: "2 hours ago", status: "pending" },
+                    { id: 2, title: "Tool Maintenance Guide", action: "Approved", user: "Jane Smith", time: "4 hours ago", status: "approved" },
+                    { id: 3, title: "Quality Control Process", action: "Flagged", user: "Mike Johnson", time: "6 hours ago", status: "flagged" },
+                    { id: 4, title: "Equipment Setup", action: "Published", user: "Sarah Wilson", time: "8 hours ago", status: "published" },
+                  ].map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <div className={cn(
+                          "h-2 w-2 rounded-full",
+                          item.status === "pending" && "bg-secondary",
+                          item.status === "approved" && "bg-success",
+                          item.status === "flagged" && "bg-error",
+                          item.status === "published" && "bg-primary"
+                        )} />
+                        <div>
+                          <p className="font-medium text-sm">{item.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.action} by {item.user} • {item.time}
+                          </p>
+                        </div>
+                      </div>
+                      <Button size="sm" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
@@ -391,6 +634,7 @@ const AdminDashboardPage: React.FC = () => {
               <Button 
                 variant="outline" 
                 className="h-20 flex-col space-y-2 hover:bg-primary/10 hover:border-primary transition-all duration-200 hover:scale-105"
+                onClick={() => console.log('Navigate to user management')}
               >
                 <Users className="h-6 w-6" />
                 <span className="text-sm font-medium">Manage Users</span>
@@ -399,6 +643,7 @@ const AdminDashboardPage: React.FC = () => {
               <Button 
                 variant="outline" 
                 className="h-20 flex-col space-y-2 hover:bg-primary/10 hover:border-primary transition-all duration-200 hover:scale-105"
+                onClick={() => console.log('Navigate to customer management')}
               >
                 <Building2 className="h-6 w-6" />
                 <span className="text-sm font-medium">Organizations</span>
@@ -406,18 +651,20 @@ const AdminDashboardPage: React.FC = () => {
               
               <Button 
                 variant="outline" 
-                className="h-20 flex-col space-y-2 hover:bg-primary/10 hover:border-primary transition-all duration-200 hover:scale-105"
+                className="h-20 flex-col space-y-2 hover:bg-error/10 hover:border-error transition-all duration-200 hover:scale-105"
+                onClick={() => console.log('Navigate to moderation queue')}
               >
-                <Filter className="h-6 w-6" />
+                <Flag className="h-6 w-6" />
                 <span className="text-sm font-medium">Moderation</span>
               </Button>
               
               <Button 
                 variant="outline" 
-                className="h-20 flex-col space-y-2 hover:bg-primary/10 hover:border-primary transition-all duration-200 hover:scale-105"
+                className="h-20 flex-col space-y-2 hover:bg-success/10 hover:border-success transition-all duration-200 hover:scale-105"
+                onClick={() => console.log('Navigate to content allocation')}
               >
-                <Calendar className="h-6 w-6" />
-                <span className="text-sm font-medium">Reports</span>
+                <Video className="h-6 w-6" />
+                <span className="text-sm font-medium">Content Library</span>
               </Button>
             </div>
           </CardContent>
