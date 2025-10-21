@@ -257,3 +257,67 @@ export interface FacetItem {
   count: number;
   label: string;
 }
+
+// Quiz Results and Certificate Page Types
+export interface QuizResult {
+  id: string;
+  quiz_id: string;
+  user_id: string;
+  course_id?: string;
+  attempt_id: string;
+  score: number;
+  max_score: number;
+  percentage: number;
+  passed: boolean;
+  attempts_used: number;
+  max_attempts: number;
+  attempts_remaining: number;
+  time_taken: number; // in seconds
+  completed_at: string;
+  questions: QuizResultQuestion[];
+  certificate_eligible: boolean;
+  certificate_id?: string;
+}
+
+export interface QuizResultQuestion {
+  id: string;
+  question: string;
+  type: 'multiple_choice' | 'short_answer' | 'true_false';
+  user_answer: string | string[];
+  correct_answer: string | string[];
+  is_correct: boolean;
+  points_earned: number;
+  max_points: number;
+  explanation?: string;
+  remediation_clip_id?: string;
+  remediation_clip?: Clip;
+}
+
+export interface CertificateResult {
+  id: string;
+  certificate_number: string;
+  user_name: string;
+  course_title: string;
+  completion_date: string;
+  score: number;
+  percentage: number;
+  issued_at: string;
+  expires_at?: string;
+  verification_url: string;
+  qr_code: string;
+  pdf_url: string;
+  share_url: string;
+  organization_name?: string;
+  template_id: string;
+  custom_fields: Record<string, any>;
+}
+
+export interface RetakeOptions {
+  allowed: boolean;
+  available_at?: string;
+  cooldown_hours?: number;
+  max_attempts: number;
+  attempts_used: number;
+  next_attempt_allowed: boolean;
+  reason?: string;
+}

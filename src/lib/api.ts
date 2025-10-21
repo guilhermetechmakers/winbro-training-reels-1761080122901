@@ -214,6 +214,31 @@ export const quizzesApi = {
   
   getAttempt: (id: string, attemptId: string) =>
     api.get<any>(`/quizzes/${id}/attempts/${attemptId}`),
+  
+  getResult: (id: string, attemptId: string) =>
+    api.get<any>(`/quizzes/${id}/results/${attemptId}`),
+  
+  retake: (id: string) => api.post<any>(`/quizzes/${id}/retake`, {}),
+  
+  getRetakeOptions: (id: string) => api.get<any>(`/quizzes/${id}/retake-options`),
+};
+
+// Certificates API
+export const certificatesApi = {
+  getById: (id: string) => api.get<any>(`/certificates/${id}`),
+  
+  getByCourse: (courseId: string) => api.get<any>(`/certificates/course/${courseId}`),
+  
+  getByUser: (_params?: any) => api.get<any>('/certificates/user'),
+  
+  download: (id: string) => api.get<any>(`/certificates/${id}/download`),
+  
+  share: (id: string) => api.post<any>(`/certificates/${id}/share`, {}),
+  
+  verify: (certificateNumber: string) => api.get<any>(`/certificates/verify/${certificateNumber}`),
+  
+  generate: (courseId: string, userId: string) => 
+    api.post<any>('/certificates/generate', { course_id: courseId, user_id: userId }),
 };
 
 // Analytics API
