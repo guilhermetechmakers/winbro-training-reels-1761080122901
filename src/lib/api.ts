@@ -167,6 +167,11 @@ export const clipsApi = {
   
   getNotes: (id: string) => api.get<any>(`/clips/${id}/notes`),
   
+  addComment: (id: string, content: string, parent_id?: string) =>
+    api.post(`/clips/${id}/comments`, { content, parent_id }),
+  
+  getComments: (id: string) => api.get<any>(`/clips/${id}/comments`),
+  
   report: (id: string, reason: string, description?: string) =>
     api.post(`/clips/${id}/report`, { reason, description }),
 };
