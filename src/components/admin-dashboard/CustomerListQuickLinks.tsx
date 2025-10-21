@@ -59,11 +59,11 @@ const TIER_CONFIG = {
 };
 
 const CustomerSkeleton = () => (
-  <Card className="animate-pulse">
+  <Card className="animate-pulse bg-gradient-to-br from-card to-card/50">
     <CardContent className="p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="h-10 w-10 bg-muted rounded"></div>
+          <div className="h-10 w-10 bg-muted rounded-lg"></div>
           <div className="space-y-1">
             <div className="h-4 bg-muted rounded w-24"></div>
             <div className="h-3 bg-muted rounded w-16"></div>
@@ -126,9 +126,11 @@ const CustomerCard: React.FC<{
   return (
     <Card 
       className={cn(
-        "hover:shadow-lg transition-all duration-200 cursor-pointer",
-        customer.status === 'suspended' && "border-error/50 bg-error/5",
-        isHighUsage && "border-warning/50 bg-warning/5"
+        "hover:shadow-elevation-200 transition-all duration-300 cursor-pointer group",
+        "hover:-translate-y-1 hover:border-primary/30",
+        customer.status === 'suspended' && "border-error/50 bg-error/5 hover:bg-error/10",
+        isHighUsage && "border-secondary/50 bg-secondary/5 hover:bg-secondary/10",
+        "bg-gradient-to-br from-card to-card/50"
       )}
       onClick={() => onCustomerClick?.(customer)}
     >
@@ -142,8 +144,8 @@ const CustomerCard: React.FC<{
               <Building2 className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-sm">{customer.name}</h3>
-              <p className="text-xs text-muted-foreground">
+              <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">{customer.name}</h3>
+              <p className="text-xs text-muted-foreground group-hover:text-foreground/80 transition-colors">
                 {customer.organizationId}
               </p>
             </div>
@@ -161,7 +163,7 @@ const CustomerCard: React.FC<{
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 w-6 p-0"
+              className="h-6 w-6 p-0 hover:bg-primary/10 hover:text-primary transition-all duration-200"
               onClick={(e) => {
                 e.stopPropagation();
                 onManageCustomer?.(customer);
@@ -233,7 +235,7 @@ const CustomerCard: React.FC<{
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 px-2 text-xs"
+            className="h-6 px-2 text-xs hover:bg-primary/10 hover:text-primary transition-all duration-200"
             onClick={(e) => {
               e.stopPropagation();
               onManageCustomer?.(customer);
@@ -306,15 +308,18 @@ export const CustomerListQuickLinks: React.FC<CustomerListQuickLinksProps> = ({
   return (
     <div className={cn('space-y-4', className)}>
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Customer Organizations</h2>
+        <h2 className="text-lg font-semibold flex items-center space-x-2">
+          <Building2 className="h-5 w-5 text-primary" />
+          <span>Customer Organizations</span>
+        </h2>
         <div className="flex items-center space-x-2">
           {suspendedCustomers.length > 0 && (
-            <Badge variant="destructive" className="text-xs">
+            <Badge variant="destructive" className="text-xs animate-pulse">
               {suspendedCustomers.length} suspended
             </Badge>
           )}
           {highUsageCustomers.length > 0 && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs animate-pulse">
               {highUsageCustomers.length} high usage
             </Badge>
           )}
@@ -323,19 +328,28 @@ export const CustomerListQuickLinks: React.FC<CustomerListQuickLinksProps> = ({
       </div>
       
       <div className="space-y-3">
-        {data.map((customer) => (
-          <CustomerCard
+        {data.map((customer, index) => (
+          <div
             key={customer.id}
-            customer={customer}
-            onCustomerClick={onCustomerClick}
-            onManageCustomer={onManageCustomer}
-          />
+            className="animate-fade-in-up"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <CustomerCard
+              customer={customer}
+              onCustomerClick={onCustomerClick}
+              onManageCustomer={onManageCustomer}
+            />
+          </div>
         ))}
       </div>
       
       {data.length > 5 && (
         <div className="text-center">
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="hover:bg-primary/10 hover:border-primary transition-all duration-200"
+          >
             View All Customers
           </Button>
         </div>

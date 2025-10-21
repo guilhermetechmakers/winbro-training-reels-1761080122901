@@ -82,7 +82,7 @@ const TASK_TYPE_CONFIG = {
 };
 
 const TaskSkeleton = () => (
-  <Card className="animate-pulse">
+  <Card className="animate-pulse bg-gradient-to-br from-card to-card/50">
     <CardContent className="p-4">
       <div className="flex items-start justify-between">
         <div className="space-y-2 flex-1">
@@ -137,9 +137,11 @@ const TaskCard: React.FC<{
   return (
     <Card 
       className={cn(
-        "hover:shadow-lg transition-all duration-200 cursor-pointer",
-        isOverdue && "border-error/50 bg-error/5",
-        task.priority === 'urgent' && "border-error/30 bg-error/5"
+        "hover:shadow-elevation-200 transition-all duration-300 cursor-pointer group",
+        "hover:-translate-y-1 hover:border-primary/30",
+        isOverdue && "border-error/50 bg-error/5 hover:bg-error/10",
+        task.priority === 'urgent' && "border-error/30 bg-error/5 hover:bg-error/10",
+        "bg-gradient-to-br from-card to-card/50"
       )}
       onClick={() => onTaskClick?.(task)}
     >
@@ -147,11 +149,11 @@ const TaskCard: React.FC<{
         <div className="flex items-start justify-between">
           <div className="space-y-2 flex-1">
             <div className="flex items-center space-x-2">
-              <TypeIcon className="h-4 w-4 text-muted-foreground" />
-              <h3 className="font-semibold text-sm">{task.title}</h3>
+              <TypeIcon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">{task.title}</h3>
             </div>
             
-            <p className="text-sm text-muted-foreground line-clamp-2">
+            <p className="text-sm text-muted-foreground line-clamp-2 group-hover:text-foreground/80 transition-colors">
               {task.description}
             </p>
             
@@ -203,7 +205,7 @@ const TaskCard: React.FC<{
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-6 px-2 text-xs"
+                  className="h-6 px-2 text-xs hover:bg-primary/10 hover:border-primary transition-all duration-200"
                   onClick={(e) => {
                     e.stopPropagation();
                     onTaskAction(task.id, 'start');
@@ -214,7 +216,7 @@ const TaskCard: React.FC<{
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-6 px-2 text-xs"
+                  className="h-6 px-2 text-xs hover:bg-success/10 hover:border-success transition-all duration-200"
                   onClick={(e) => {
                     e.stopPropagation();
                     onTaskAction(task.id, 'complete');
@@ -284,15 +286,18 @@ export const OutstandingTasks: React.FC<OutstandingTasksProps> = ({
   return (
     <div className={cn('space-y-4', className)}>
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Outstanding Tasks</h2>
+        <h2 className="text-lg font-semibold flex items-center space-x-2">
+          <AlertTriangle className="h-5 w-5 text-primary" />
+          <span>Outstanding Tasks</span>
+        </h2>
         <div className="flex items-center space-x-2">
           {urgentTasks.length > 0 && (
-            <Badge variant="destructive" className="text-xs">
+            <Badge variant="destructive" className="text-xs animate-pulse">
               {urgentTasks.length} urgent
             </Badge>
           )}
           {overdueTasks.length > 0 && (
-            <Badge variant="destructive" className="text-xs">
+            <Badge variant="destructive" className="text-xs animate-pulse">
               {overdueTasks.length} overdue
             </Badge>
           )}
@@ -301,19 +306,28 @@ export const OutstandingTasks: React.FC<OutstandingTasksProps> = ({
       </div>
       
       <div className="space-y-3">
-        {data.map((task) => (
-          <TaskCard
+        {data.map((task, index) => (
+          <div
             key={task.id}
-            task={task}
-            onTaskClick={onTaskClick}
-            onTaskAction={onTaskAction}
-          />
+            className="animate-fade-in-up"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <TaskCard
+              task={task}
+              onTaskClick={onTaskClick}
+              onTaskAction={onTaskAction}
+            />
+          </div>
         ))}
       </div>
       
       {data.length > 5 && (
         <div className="text-center">
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="hover:bg-primary/10 hover:border-primary transition-all duration-200"
+          >
             View All Tasks
           </Button>
         </div>

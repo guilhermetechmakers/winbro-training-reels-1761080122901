@@ -75,13 +75,13 @@ const CHART_TYPES = [
 ];
 
 const ChartSkeleton = () => (
-  <Card className="animate-pulse">
+  <Card className="animate-pulse bg-gradient-to-br from-card to-card/50">
     <CardHeader>
       <div className="h-6 bg-muted rounded w-32 mb-2"></div>
       <div className="h-4 bg-muted rounded w-48"></div>
     </CardHeader>
     <CardContent>
-      <div className="h-64 bg-muted rounded"></div>
+      <div className="h-64 bg-muted rounded-xl"></div>
     </CardContent>
   </Card>
 );
@@ -240,15 +240,21 @@ const ChartCard: React.FC<{
   };
 
   return (
-    <Card className="hover:shadow-lg transition-all duration-200">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold">{chart.title}</CardTitle>
+    <Card className="hover:shadow-elevation-200 transition-all duration-300 hover:-translate-y-1 group bg-gradient-to-br from-card to-card/50">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors">
+          {chart.title}
+        </CardTitle>
         {chart.description && (
-          <p className="text-sm text-muted-foreground">{chart.description}</p>
+          <p className="text-sm text-muted-foreground group-hover:text-foreground/80 transition-colors">
+            {chart.description}
+          </p>
         )}
       </CardHeader>
-      <CardContent>
-        {renderChart()}
+      <CardContent className="pt-0">
+        <div className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
+          {renderChart()}
+        </div>
       </CardContent>
     </Card>
   );
@@ -276,7 +282,10 @@ export const Charts: React.FC<ChartsProps> = ({
       <div className={cn('space-y-6', className)}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {CHART_TYPES.map((chartType) => (
-            <Card key={chartType.id} className="border-dashed">
+            <Card 
+              key={chartType.id} 
+              className="border-dashed border-2 border-muted/50 bg-muted/20 hover:bg-muted/30 transition-colors"
+            >
               <CardHeader>
                 <div className="flex items-center space-x-2">
                   <chartType.icon className="h-5 w-5 text-muted-foreground" />
@@ -304,11 +313,23 @@ export const Charts: React.FC<ChartsProps> = ({
   return (
     <div className={cn('space-y-6', className)}>
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="content">Content</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="system">System</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 bg-muted/50">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="content" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <Upload className="h-4 w-4 mr-2" />
+            Content
+          </TabsTrigger>
+          <TabsTrigger value="users" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <Users className="h-4 w-4 mr-2" />
+            Users
+          </TabsTrigger>
+          <TabsTrigger value="system" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <Search className="h-4 w-4 mr-2" />
+            System
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-6">
