@@ -7,6 +7,7 @@ import { ThemeProvider } from 'next-themes';
 import LandingPage from '@/pages/LandingPage';
 import LoginPage from '@/pages/auth/LoginPage';
 import SignupPage from '@/pages/auth/SignupPage';
+import LoginSignupPage from '@/pages/auth/LoginSignupPage';
 import PasswordResetPage from '@/pages/auth/PasswordResetPage';
 import EmailVerificationPage from '@/pages/auth/EmailVerificationPage';
 import DashboardPage from '@/pages/DashboardPage';
@@ -60,6 +61,7 @@ function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
+              <Route path="/auth" element={<LoginSignupPage />} />
               <Route path="/password-reset" element={<PasswordResetPage />} />
               <Route path="/email-verification" element={<EmailVerificationPage />} />
               <Route path="/help" element={<HelpPage />} />

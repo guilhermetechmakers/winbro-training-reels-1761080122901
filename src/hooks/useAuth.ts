@@ -1,60 +1,78 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authApi, usersApi } from '@/lib/api';
-import { toast } from 'sonner';
-import type { User, AuthResponse } from '@/types';
+import { authToasts } from '@/components/auth/ErrorSuccessToasters';
+import type { 
+  SignInInput, 
+  SignUpInput, 
+  AuthResponse, 
+  PasswordResetRequest, 
+  PasswordResetConfirm,
+  EmailVerificationRequest,
+  EmailVerificationConfirm,
+  User 
+} from '@/types/auth';
 
 // Query keys
 export const authKeys = {
-  user: ['auth', 'user'] as const,
-  profile: ['auth', 'profile'] as const,
+  all: ['auth'] as const,
+  user: () => [...authKeys.all, 'user'] as const,
+  session: () => [...authKeys.all, 'session'] as const,
 };
 
 // Get current user
 export const useCurrentUser = () => {
   return useQuery({
-    queryKey: authKeys.user,
-    queryFn: usersApi.getCurrent,
+    queryKey: authKeys.user(),
+    queryFn: () => usersApi.getCurrent(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
     retry: false,
-    staleTime: 1000 * 60 * 10, // 10 minutes
-    enabled: !!localStorage.getItem('auth_token'),
   });
 };
 
 // Sign in mutation
 export const useSignIn = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation({
-    mutationFn: authApi.signIn,
-    onSuccess: (data: AuthResponse) => {
+    mutationFn: (data: SignInInput) => authApi.signIn(data),
+    onSuccess: (response: AuthResponse) => {
       // Store tokens
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('refresh_token', data.refresh_token);
+      localStorage.setItem('auth_token', response.token);
+      localStorage.setItem('refresh_token', response.refresh_token);
       
-      // Update the user in the cache
-      queryClient.setQueryData(authKeys.user, data.user);
+      // Update cache
+      queryClient.setQueryData(authKeys.user(), response.user);
       
-      toast.success('Signed in successfully!');
+      // Show success toast
+      authToasts.loginSuccess();
     },
     onError: (error: any) => {
-      toast.error(`Sign in failed: ${error.message}`);
+      console.error('Sign in error:', error);
+      authToasts.loginError(error.message);
     },
   });
 };
 
 // Sign up mutation
 export const useSignUp = () => {
+  const queryClient = useQueryClient();
+  
   return useMutation({
-    mutationFn: authApi.signUp,
-    onSuccess: (data: AuthResponse) => {
+    mutationFn: (data: SignUpInput) => authApi.signUp(data),
+    onSuccess: (response: AuthResponse) => {
       // Store tokens
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('refresh_token', data.refresh_token);
+      localStorage.setItem('auth_token', response.token);
+      localStorage.setItem('refresh_token', response.refresh_token);
       
-      toast.success('Account created! Please check your email to verify your account.');
+      // Update cache
+      queryClient.setQueryData(authKeys.user(), response.user);
+      
+      // Show success toast
+      authToasts.signupSuccess();
     },
     onError: (error: any) => {
-      toast.error(`Sign up failed: ${error.message}`);
+      console.error('Sign up error:', error);
+      authToasts.signupError(error.message);
     },
   });
 };
@@ -62,21 +80,26 @@ export const useSignUp = () => {
 // Sign out mutation
 export const useSignOut = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation({
-    mutationFn: authApi.signOut,
+    mutationFn: () => authApi.signOut(),
     onSuccess: () => {
       // Clear tokens
       localStorage.removeItem('auth_token');
       localStorage.removeItem('refresh_token');
       
-      // Clear all cached data
+      // Clear cache
       queryClient.clear();
       
-      toast.success('Signed out successfully!');
+      // Show success toast
+      authToasts.loginSuccess();
     },
     onError: (error: any) => {
-      toast.error(`Sign out failed: ${error.message}`);
+      console.error('Sign out error:', error);
+      // Still clear local storage even if API call fails
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
+      queryClient.clear();
     },
   });
 };
@@ -84,12 +107,13 @@ export const useSignOut = () => {
 // Password reset request mutation
 export const usePasswordResetRequest = () => {
   return useMutation({
-    mutationFn: authApi.requestPasswordReset,
+    mutationFn: (data: PasswordResetRequest) => authApi.requestPasswordReset(data.email),
     onSuccess: () => {
-      toast.success('Password reset email sent! Check your inbox.');
+      authToasts.passwordResetSent();
     },
     onError: (error: any) => {
-      toast.error(`Password reset failed: ${error.message}`);
+      console.error('Password reset request error:', error);
+      authToasts.passwordResetError(error.message);
     },
   });
 };
@@ -97,76 +121,64 @@ export const usePasswordResetRequest = () => {
 // Password reset confirm mutation
 export const usePasswordResetConfirm = () => {
   return useMutation({
-    mutationFn: ({ token, newPassword }: { token: string; newPassword: string }) =>
-      authApi.resetPassword(token, newPassword),
+    mutationFn: (data: PasswordResetConfirm) => 
+      authApi.resetPassword(data.token, data.new_password),
     onSuccess: () => {
-      toast.success('Password reset successfully! You can now sign in.');
+      authToasts.loginSuccess();
     },
     onError: (error: any) => {
-      toast.error(`Password reset failed: ${error.message}`);
+      console.error('Password reset confirm error:', error);
+      authToasts.passwordResetError(error.message);
     },
   });
 };
 
-// Email verification mutation
-export const useEmailVerification = () => {
+// Email verification request mutation
+export const useEmailVerificationRequest = () => {
   return useMutation({
-    mutationFn: authApi.verifyEmail,
+    mutationFn: (data: EmailVerificationRequest) => authApi.resendVerification(data.email),
     onSuccess: () => {
-      toast.success('Email verified successfully!');
+      authToasts.emailVerificationSent();
     },
     onError: (error: any) => {
-      toast.error(`Email verification failed: ${error.message}`);
+      console.error('Email verification request error:', error);
+      authToasts.emailVerificationError(error.message);
     },
   });
 };
 
-// Resend verification mutation
-export const useResendVerification = () => {
-  return useMutation({
-    mutationFn: authApi.resendVerification,
-    onSuccess: () => {
-      toast.success('Verification email sent! Check your inbox.');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to send verification email: ${error.message}`);
-    },
-  });
-};
-
-// Update profile mutation
-export const useUpdateProfile = () => {
+// Email verification confirm mutation
+export const useEmailVerificationConfirm = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation({
-    mutationFn: usersApi.updateProfile,
-    onSuccess: (updatedUser: User) => {
-      // Update the user in the cache
-      queryClient.setQueryData(authKeys.user, updatedUser);
-      
-      toast.success('Profile updated successfully!');
+    mutationFn: async (data: EmailVerificationConfirm) => {
+      const response = await authApi.verifyEmail(data.token) as { user: User };
+      return { user: response.user };
+    },
+    onSuccess: (response: { user: User }) => {
+      // Update user in cache
+      queryClient.setQueryData(authKeys.user(), response.user);
+      authToasts.loginSuccess();
     },
     onError: (error: any) => {
-      toast.error(`Failed to update profile: ${error.message}`);
+      console.error('Email verification confirm error:', error);
+      authToasts.emailVerificationError(error.message);
     },
   });
 };
 
-// Refresh token mutation
+// Token refresh mutation
 export const useRefreshToken = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation({
-    mutationFn: authApi.refreshToken,
-    onSuccess: (data: { token: string }) => {
-      // Update stored token
-      localStorage.setItem('auth_token', data.token);
-      
-      // Refetch user data
-      queryClient.invalidateQueries({ queryKey: authKeys.user });
+    mutationFn: () => authApi.refreshToken(),
+    onSuccess: (response: { token: string }) => {
+      localStorage.setItem('auth_token', response.token);
     },
     onError: () => {
-      // If refresh fails, sign out
+      // If refresh fails, clear everything and redirect to login
       localStorage.removeItem('auth_token');
       localStorage.removeItem('refresh_token');
       queryClient.clear();
@@ -183,7 +195,39 @@ export const useAuthStatus = () => {
     user,
     isLoading,
     isAuthenticated: !!user && !error,
-    isVerified: user?.is_verified,
-    isActive: user?.is_active,
+    error,
+  };
+};
+
+// Auth actions hook
+export const useAuthActions = () => {
+  const signIn = useSignIn();
+  const signUp = useSignUp();
+  const signOut = useSignOut();
+  const passwordResetRequest = usePasswordResetRequest();
+  const passwordResetConfirm = usePasswordResetConfirm();
+  const emailVerificationRequest = useEmailVerificationRequest();
+  const emailVerificationConfirm = useEmailVerificationConfirm();
+  const refreshToken = useRefreshToken();
+  
+  return {
+    signIn: signIn.mutate,
+    signUp: signUp.mutate,
+    signOut: signOut.mutate,
+    passwordResetRequest: passwordResetRequest.mutate,
+    passwordResetConfirm: passwordResetConfirm.mutate,
+    emailVerificationRequest: emailVerificationRequest.mutate,
+    emailVerificationConfirm: emailVerificationConfirm.mutate,
+    refreshToken: refreshToken.mutate,
+    
+    // Loading states
+    isSigningIn: signIn.isPending,
+    isSigningUp: signUp.isPending,
+    isSigningOut: signOut.isPending,
+    isRequestingPasswordReset: passwordResetRequest.isPending,
+    isConfirmingPasswordReset: passwordResetConfirm.isPending,
+    isRequestingEmailVerification: emailVerificationRequest.isPending,
+    isConfirmingEmailVerification: emailVerificationConfirm.isPending,
+    isRefreshingToken: refreshToken.isPending,
   };
 };
