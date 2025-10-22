@@ -1,241 +1,222 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { coursesApi } from '@/lib/api';
-import { toast } from 'sonner';
-import type { Course, CourseModule, CourseNode } from '@/types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { Course } from '@/types/content';
 
-// Query keys
-export const courseKeys = {
-  all: ['courses'] as const,
-  lists: () => [...courseKeys.all, 'list'] as const,
-  list: (filters: any) => [...courseKeys.lists(), { filters }] as const,
-  details: () => [...courseKeys.all, 'detail'] as const,
-  detail: (id: string) => [...courseKeys.details(), id] as const,
-  progress: (id: string) => [...courseKeys.all, 'progress', id] as const,
-  certificate: (id: string) => [...courseKeys.all, 'certificate', id] as const,
-};
+// Mock data for development
+const mockCourses: Course[] = [
+  {
+    id: 'course-1',
+    title: 'Introduction to Manufacturing',
+    description: 'Learn the basics of modern manufacturing processes',
+    thumbnail_url: '/api/placeholder/300/200',
+    author_id: 'user-1',
+    author: {
+      id: 'user-1',
+      name: 'John Doe',
+      email: 'john@example.com',
+      avatar_url: '/api/placeholder/40/40',
+      role: 'trainer',
+      organization_id: 'org-1',
+      is_verified: true,
+      is_active: true,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z'
+    },
+    status: 'published',
+    customer_assignments: ['org-1'],
+    modules: [
+      {
+        id: 'module-1',
+        title: 'Safety Basics',
+        description: 'Essential safety procedures',
+        order: 0,
+        nodes: [
+          {
+            id: 'node-1',
+            type: 'clip',
+            order: 0,
+            is_required: true,
+            estimated_duration: 5,
+            clip_id: 'clip-1',
+            clip: {
+              id: 'clip-1',
+              title: 'Safety Introduction',
+              description: 'Basic safety overview',
+              duration: 300,
+              thumbnail_url: '/api/placeholder/300/200',
+              video_url: '/api/videos/clip-1.mp4',
+              hls_url: '/api/videos/clip-1.m3u8',
+              machine_model: 'Model A',
+              process: 'Safety',
+              tooling: ['Safety glasses', 'Hard hat'],
+              tags: ['safety', 'introduction'],
+              skill_level: 'beginner',
+              author_id: 'user-1',
+              author: {
+                id: 'user-1',
+                name: 'John Doe',
+                email: 'john@example.com',
+                avatar_url: '/api/placeholder/40/40',
+                role: 'trainer',
+                organization_id: 'org-1',
+                is_verified: true,
+                is_active: true,
+                created_at: '2024-01-01T00:00:00Z',
+                updated_at: '2024-01-01T00:00:00Z'
+              },
+              status: 'published',
+              customer_assignments: ['org-1'],
+              transcript: [],
+              metadata: {
+                resolution: '1920x1080',
+                frame_rate: 30,
+                bitrate: 2000,
+                codec: 'h264',
+                file_size: 50000000,
+                duration_original: 300,
+                processing_status: 'completed',
+                virus_scan_status: 'clean',
+                moderation_flags: []
+              },
+              created_at: '2024-01-01T00:00:00Z',
+              updated_at: '2024-01-01T00:00:00Z',
+              published_at: '2024-01-01T00:00:00Z',
+              view_count: 150,
+              bookmark_count: 25
+            }
+          }
+        ],
+        is_required: true,
+        estimated_duration: 5
+      }
+    ],
+    settings: {
+      passing_threshold: 80,
+      max_attempts: 3,
+      certificate_template_id: 'template-1',
+      is_self_paced: true,
+      due_date: undefined,
+      prerequisites: [],
+      visibility: 'organization'
+    },
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    published_at: '2024-01-01T00:00:00Z',
+    enrollment_count: 45,
+    completion_rate: 0.85
+  }
+];
 
-// Get all courses
-export const useCourses = (filters?: any) => {
-  return useQuery({
-    queryKey: courseKeys.list(filters || {}),
-    queryFn: () => coursesApi.getAll(filters),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-};
-
-// Get course by ID
-export const useCourse = (id: string) => {
-  return useQuery({
-    queryKey: courseKeys.detail(id),
-    queryFn: () => coursesApi.getById(id),
-    enabled: !!id,
-  });
-};
-
-// Get course progress
-export const useCourseProgress = (id: string) => {
-  return useQuery({
-    queryKey: courseKeys.progress(id),
-    queryFn: () => coursesApi.getProgress(id),
-    enabled: !!id,
-  });
-};
-
-// Get course certificate
-export const useCourseCertificate = (id: string) => {
-  return useQuery({
-    queryKey: courseKeys.certificate(id),
-    queryFn: () => coursesApi.getCertificate(id),
-    enabled: !!id,
-  });
-};
-
-// Create course mutation
-export const useCreateCourse = () => {
+export const useCourses = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: coursesApi.create,
-    onSuccess: (newCourse: Course) => {
-      // Invalidate and refetch courses list
-      queryClient.invalidateQueries({ queryKey: courseKeys.lists() });
-      
-      // Add the new course to the cache
-      queryClient.setQueryData(courseKeys.detail(newCourse.id), newCourse);
-      
-      toast.success('Course created successfully!');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to create course: ${error.message}`);
-    },
+  // Get all courses
+  const { data: courses, isLoading, error } = useQuery({
+    queryKey: ['courses'],
+    queryFn: async () => {
+      // In a real app, this would be an API call
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+      return mockCourses;
+    }
   });
-};
 
-// Update course mutation
-export const useUpdateCourse = () => {
-  const queryClient = useQueryClient();
+  // Get a single course
+  const useCourse = (courseId: string) => {
+    return useQuery({
+      queryKey: ['courses', courseId],
+      queryFn: async () => {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return mockCourses.find(course => course.id === courseId);
+      },
+      enabled: !!courseId
+    });
+  };
 
-  return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Course> }) =>
-      coursesApi.update(id, updates),
-    onSuccess: (updatedCourse: Course) => {
-      // Update the course in the cache
-      queryClient.setQueryData(courseKeys.detail(updatedCourse.id), updatedCourse);
+  // Create course
+  const createCourse = useMutation({
+    mutationFn: async (courseData: Omit<Course, 'id' | 'created_at' | 'updated_at'>) => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Invalidate courses list to ensure consistency
-      queryClient.invalidateQueries({ queryKey: courseKeys.lists() });
+      const newCourse: Course = {
+        ...courseData,
+        id: `course-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
       
-      toast.success('Course updated successfully!');
+      mockCourses.push(newCourse);
+      return newCourse;
     },
-    onError: (error: any) => {
-      toast.error(`Failed to update course: ${error.message}`);
-    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+    }
   });
-};
 
-// Delete course mutation
-export const useDeleteCourse = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: coursesApi.delete,
-    onSuccess: (_, deletedId) => {
-      // Remove the course from the cache
-      queryClient.removeQueries({ queryKey: courseKeys.detail(deletedId) });
+  // Update course
+  const updateCourse = useMutation({
+    mutationFn: async (courseData: Course) => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Invalidate courses list
-      queryClient.invalidateQueries({ queryKey: courseKeys.lists() });
+      const index = mockCourses.findIndex(course => course.id === courseData.id);
+      if (index !== -1) {
+        mockCourses[index] = {
+          ...courseData,
+          updated_at: new Date().toISOString()
+        };
+        return mockCourses[index];
+      }
+      throw new Error('Course not found');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+    }
+  });
+
+  // Delete course
+  const deleteCourse = useMutation({
+    mutationFn: async (courseId: string) => {
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      toast.success('Course deleted successfully!');
+      const index = mockCourses.findIndex(course => course.id === courseId);
+      if (index !== -1) {
+        mockCourses.splice(index, 1);
+        return true;
+      }
+      throw new Error('Course not found');
     },
-    onError: (error: any) => {
-      toast.error(`Failed to delete course: ${error.message}`);
-    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+    }
   });
-};
 
-// Enroll in course mutation
-export const useEnrollCourse = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: coursesApi.enroll,
-    onSuccess: (_, courseId) => {
-      // Invalidate course progress
-      queryClient.invalidateQueries({ queryKey: courseKeys.progress(courseId) });
+  // Publish course
+  const publishCourse = useMutation({
+    mutationFn: async ({ courseId, status }: { courseId: string; status: Course['status'] }) => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Invalidate course details to reflect enrollment status
-      queryClient.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
-      
-      toast.success('Successfully enrolled in course!');
+      const course = mockCourses.find(c => c.id === courseId);
+      if (course) {
+        course.status = status;
+        course.updated_at = new Date().toISOString();
+        if (status === 'published') {
+          course.published_at = new Date().toISOString();
+        }
+        return course;
+      }
+      throw new Error('Course not found');
     },
-    onError: (error: any) => {
-      toast.error(`Failed to enroll in course: ${error.message}`);
-    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+    }
   });
-};
 
-// Unenroll from course mutation
-export const useUnenrollCourse = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: coursesApi.unenroll,
-    onSuccess: (_, courseId) => {
-      // Invalidate course progress
-      queryClient.invalidateQueries({ queryKey: courseKeys.progress(courseId) });
-      
-      // Invalidate course details to reflect enrollment status
-      queryClient.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
-      
-      toast.success('Successfully unenrolled from course!');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to unenroll from course: ${error.message}`);
-    },
-  });
-};
-
-// Update course progress mutation
-export const useUpdateCourseProgress = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, progress }: { id: string; progress: any }) =>
-      coursesApi.updateProgress(id, progress),
-    onSuccess: (_, { id }) => {
-      // Invalidate course progress
-      queryClient.invalidateQueries({ queryKey: courseKeys.progress(id) });
-      
-      // Invalidate course details to reflect progress
-      queryClient.invalidateQueries({ queryKey: courseKeys.detail(id) });
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to update progress: ${error.message}`);
-    },
-  });
-};
-
-// Course builder mutations
-export const useAddCourseModule = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ courseId, module }: { courseId: string; module: Omit<CourseModule, 'id'> }) => {
-      // This would be implemented in the API layer
-      return coursesApi.update(courseId, { 
-        modules: [{ ...module, id: Date.now().toString() }] 
-      });
-    },
-    onSuccess: (_, { courseId }) => {
-      queryClient.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
-      toast.success('Module added successfully!');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to add module: ${error.message}`);
-    },
-  });
-};
-
-export const useAddCourseNode = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ courseId, moduleId, node }: { 
-      courseId: string; 
-      moduleId: string; 
-      node: Omit<CourseNode, 'id'> 
-    }) => {
-      // This would be implemented in the API layer
-      return coursesApi.update(courseId, { 
-        modules: [{ 
-          id: moduleId, 
-          nodes: [{ ...node, id: Date.now().toString() }] 
-        }] 
-      });
-    },
-    onSuccess: (_, { courseId }) => {
-      queryClient.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
-      toast.success('Node added successfully!');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to add node: ${error.message}`);
-    },
-  });
-};
-
-export const useReorderCourseContent = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ courseId, modules }: { courseId: string; modules: CourseModule[] }) =>
-      coursesApi.update(courseId, { modules }),
-    onSuccess: (_, { courseId }) => {
-      queryClient.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
-      toast.success('Course content reordered successfully!');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to reorder content: ${error.message}`);
-    },
-  });
+  return {
+    courses,
+    isLoading,
+    error,
+    useCourse,
+    createCourse,
+    updateCourse,
+    deleteCourse,
+    publishCourse
+  };
 };
