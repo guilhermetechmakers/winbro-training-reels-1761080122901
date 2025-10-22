@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,10 @@ import {
   Lightbulb,
   Shield,
   Zap,
-  Target
+  Target,
+  FileText,
+  Lock,
+  Cookie
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useContactForm } from '@/hooks/useContactForm';
@@ -760,6 +764,43 @@ const HelpPage: React.FC<HelpPageProps> = ({
               <Button variant="outline" size="lg">
                 Schedule Demo
               </Button>
+            </div>
+          </div>
+          
+          {/* Legal Links */}
+          <div className="border-t pt-8">
+            <h3 className="text-xl font-semibold mb-6 text-center">Legal & Privacy</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Link 
+                to="/privacy" 
+                className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+              >
+                <Lock className="h-5 w-5 text-primary group-hover:text-primary/80" />
+                <div>
+                  <h4 className="font-medium group-hover:text-primary">Privacy Policy</h4>
+                  <p className="text-sm text-muted-foreground">How we protect your data</p>
+                </div>
+              </Link>
+              <Link 
+                to="/cookies" 
+                className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+              >
+                <Cookie className="h-5 w-5 text-secondary group-hover:text-secondary/80" />
+                <div>
+                  <h4 className="font-medium group-hover:text-secondary">Cookie Policy</h4>
+                  <p className="text-sm text-muted-foreground">Our cookie usage</p>
+                </div>
+              </Link>
+              <Link 
+                to="/terms" 
+                className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+              >
+                <FileText className="h-5 w-5 text-info group-hover:text-info/80" />
+                <div>
+                  <h4 className="font-medium group-hover:text-info">Terms of Service</h4>
+                  <p className="text-sm text-muted-foreground">Terms and conditions</p>
+                </div>
+              </Link>
             </div>
           </div>
         </div>
