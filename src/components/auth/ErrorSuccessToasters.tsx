@@ -79,6 +79,18 @@ export const authToasts = {
     description: message || 'Failed to send reset email. Please try again.',
   }),
   
+  passwordResetSuccess: () => showToast({
+    type: 'success',
+    title: 'Password updated!',
+    description: 'Your password has been successfully reset. You can now sign in.',
+  }),
+  
+  passwordResetConfirmError: (message?: string) => showToast({
+    type: 'error',
+    title: 'Password update failed',
+    description: message || 'Failed to update password. Please try again.',
+  }),
+  
   emailVerificationSent: () => showToast({
     type: 'info',
     title: 'Verification sent',

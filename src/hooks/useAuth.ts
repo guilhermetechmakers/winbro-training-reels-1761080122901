@@ -124,11 +124,11 @@ export const usePasswordResetConfirm = () => {
     mutationFn: (data: PasswordResetConfirm) => 
       authApi.resetPassword(data.token, data.new_password),
     onSuccess: () => {
-      authToasts.loginSuccess();
+      authToasts.passwordResetSuccess();
     },
     onError: (error: any) => {
       console.error('Password reset confirm error:', error);
-      authToasts.passwordResetError(error.message);
+      authToasts.passwordResetConfirmError(error.message);
     },
   });
 };
