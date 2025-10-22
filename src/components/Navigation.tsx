@@ -28,6 +28,7 @@ const Navigation: React.FC<NavigationProps> = ({ className = "" }) => {
   const navigationItems = [
     { path: '/dashboard', label: 'Dashboard', icon: Home },
     { path: '/library', label: 'Library', icon: BookOpen },
+    { path: '/content-library', label: 'Browse', icon: BookOpen },
     { path: '/upload', label: 'Upload', icon: Upload },
     { path: '/analytics', label: 'Analytics', icon: BarChart3 },
     { path: '/settings', label: 'Settings', icon: Settings },
