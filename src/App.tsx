@@ -31,6 +31,7 @@ import PrivacyPolicyPage from '@/pages/legal/PrivacyPolicyPage';
 import TermsPage from '@/pages/legal/TermsPage';
 import CookiePolicyPage from '@/pages/legal/CookiePolicyPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import ServerErrorPage from '@/pages/ServerErrorPage';
 
 // Components
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -159,6 +160,9 @@ function App() {
                   <UserManagementPage />
                 </ProtectedRoute>
               } />
+              
+              {/* Error routes */}
+              <Route path="/500" element={<ServerErrorPage />} />
               
               {/* Catch all route */}
               <Route path="*" element={<NotFoundPage />} />
