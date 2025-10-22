@@ -297,11 +297,11 @@ const AdminDashboardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold text-foreground font-heading">Admin Dashboard</h1>
             <p className="text-muted-foreground mt-1">
               Platform overview and management tools
             </p>
@@ -342,12 +342,12 @@ const AdminDashboardPage: React.FC = () => {
         </div>
 
         {/* Status Banner */}
-        <Card className="mb-6 border-l-4 border-l-success shadow-elevation-100">
+        <Card className="mb-6 border-l-4 border-l-success shadow-elevation-100 bg-gradient-to-r from-success/5 to-transparent">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Activity className="h-5 w-5 text-success" />
+              <Activity className="h-5 w-5 text-success animate-pulse" />
               <span className="text-sm font-medium">System Status: All systems operational</span>
-              <Badge variant="secondary" className="ml-auto">
+              <Badge variant="secondary" className="ml-auto bg-success/10 text-success border-success/20">
                 Last updated: {new Date().toLocaleTimeString()}
               </Badge>
             </div>
@@ -364,20 +364,32 @@ const AdminDashboardPage: React.FC = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 bg-muted/50">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 bg-muted/50 rounded-xl p-1">
+            <TabsTrigger 
+              value="overview" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-lg transition-all duration-200"
+            >
               <BarChart3 className="h-4 w-4 mr-2" />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="content" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger 
+              value="content" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-lg transition-all duration-200"
+            >
               <Video className="h-4 w-4 mr-2" />
               Content
             </TabsTrigger>
-            <TabsTrigger value="users" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger 
+              value="users" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-lg transition-all duration-200"
+            >
               <Users className="h-4 w-4 mr-2" />
               Users
             </TabsTrigger>
-            <TabsTrigger value="customers" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger 
+              value="customers" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm rounded-lg transition-all duration-200"
+            >
               <Building2 className="h-4 w-4 mr-2" />
               Customers
             </TabsTrigger>
@@ -500,37 +512,37 @@ const AdminDashboardPage: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Button 
-                    variant="outline" 
-                    className="h-20 flex-col space-y-2 hover:bg-primary/10 hover:border-primary transition-all duration-200 hover:scale-105"
-                  >
-                    <Eye className="h-6 w-6" />
-                    <span className="text-sm font-medium">Review Content</span>
-                  </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col space-y-2 hover:bg-primary/10 hover:border-primary transition-all duration-200 hover:scale-105 group"
+            >
+              <Eye className="h-6 w-6 group-hover:animate-pulse" />
+              <span className="text-sm font-medium">Review Content</span>
+            </Button>
                   
-                  <Button 
-                    variant="outline" 
-                    className="h-20 flex-col space-y-2 hover:bg-error/10 hover:border-error transition-all duration-200 hover:scale-105"
-                  >
-                    <Flag className="h-6 w-6" />
-                    <span className="text-sm font-medium">Moderate</span>
-                  </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col space-y-2 hover:bg-error/10 hover:border-error transition-all duration-200 hover:scale-105 group"
+            >
+              <Flag className="h-6 w-6 group-hover:animate-pulse" />
+              <span className="text-sm font-medium">Moderate</span>
+            </Button>
                   
-                  <Button 
-                    variant="outline" 
-                    className="h-20 flex-col space-y-2 hover:bg-success/10 hover:border-success transition-all duration-200 hover:scale-105"
-                  >
-                    <Edit className="h-6 w-6" />
-                    <span className="text-sm font-medium">Edit Metadata</span>
-                  </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col space-y-2 hover:bg-success/10 hover:border-success transition-all duration-200 hover:scale-105 group"
+            >
+              <Edit className="h-6 w-6 group-hover:animate-pulse" />
+              <span className="text-sm font-medium">Edit Metadata</span>
+            </Button>
                   
-                  <Button 
-                    variant="outline" 
-                    className="h-20 flex-col space-y-2 hover:bg-secondary/10 hover:border-secondary transition-all duration-200 hover:scale-105"
-                  >
-                    <FileText className="h-6 w-6" />
-                    <span className="text-sm font-medium">Bulk Actions</span>
-                  </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex-col space-y-2 hover:bg-secondary/10 hover:border-secondary transition-all duration-200 hover:scale-105 group"
+            >
+              <FileText className="h-6 w-6 group-hover:animate-pulse" />
+              <span className="text-sm font-medium">Bulk Actions</span>
+            </Button>
                 </div>
               </CardContent>
             </Card>
