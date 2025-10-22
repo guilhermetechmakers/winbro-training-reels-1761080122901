@@ -328,7 +328,23 @@ export const analyticsApi = {
 
 // Billing API
 export const billingApi = {
-  getSubscription: () => api.get<any>('/billing/subscription'),
+  getSubscription: async () => {
+    // Mock implementation - in real app, this would call the API
+    const { mockSubscriptionPlans } = await import('@/data/mockSubscriptionPlans');
+    return {
+      id: 'sub_123',
+      plan: {
+        id: 'professional',
+        name: 'Professional',
+        price: 7900,
+        interval: 'month'
+      },
+      status: 'active',
+      current_period_start: '2024-01-01T00:00:00Z',
+      current_period_end: '2024-02-01T00:00:00Z',
+      plans: mockSubscriptionPlans
+    };
+  },
   
   getInvoices: (_params?: any) => api.get<any>('/billing/invoices'),
   
@@ -343,16 +359,42 @@ export const billingApi = {
   
   deletePaymentMethod: (id: string) => api.delete(`/billing/payment-methods/${id}`),
   
-  updateSubscription: (planId: string) =>
-    api.put<any>('/billing/subscription', { plan_id: planId }),
+  updateSubscription: async (planId: string) => {
+    // Mock implementation - in real app, this would call the API
+    const { mockSubscriptionPlans } = await import('@/data/mockSubscriptionPlans');
+    const selectedPlan = mockSubscriptionPlans.find((plan: any) => plan.id === planId);
+    
+    return {
+      id: 'sub_123',
+      plan: selectedPlan,
+      status: 'active',
+      current_period_start: new Date().toISOString(),
+      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date().toISOString()
+    };
+  },
   
   cancelSubscription: () => api.post<any>('/billing/subscription/cancel', {}),
   
   getUsage: () => api.get<any>('/billing/usage'),
   
-  getCoupons: () => api.get<any>('/billing/coupons'),
+  getCoupons: async () => {
+    // Mock implementation
+    const { mockCoupons } = await import('@/data/mockSubscriptionPlans');
+    return mockCoupons;
+  },
   
-  applyCoupon: (code: string) => api.post<any>('/billing/coupons/apply', { code }),
+  applyCoupon: async (code: string) => {
+    // Mock implementation
+    const { mockCoupons } = await import('@/data/mockSubscriptionPlans');
+    const coupon = mockCoupons.find((c: any) => c.code === code.toUpperCase());
+    
+    if (!coupon) {
+      throw new Error('Invalid coupon code');
+    }
+    
+    return coupon;
+  },
 };
 
 // Organizations API
